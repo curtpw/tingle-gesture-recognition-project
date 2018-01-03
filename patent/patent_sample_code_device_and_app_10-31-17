@@ -1,0 +1,659 @@
+
+
+
+
+
+//FIRMWARE SOFTWARE ON WEARABLE DEVICE
+//FIRMWARE SOFTWARE ON WEARABLE DEVICE
+//FIRMWARE SOFTWARE ON WEARABLE DEVICE
+//written in the C programming langauge
+
+//this code exceprt shows how device sensor data is agregated into an arrray of unsigned integers which are then sent as a bluetooth data "packet" to the mobile device application or other external computer application
+
+    if(central){ // if a central is connected to peripheral
+
+              const unsigned char imuCharArray[12] = {
+                  (uint8_t)roll_ble,
+                  (uint8_t)pitch_ble,
+                  (uint8_t)proximity_data,
+                  //multiply by 2 etc to retain significant digits   max 255 for 8 bit
+                  (uint8_t)(TObj1 * 2),
+                  (uint8_t)(TObj2 * 2),
+                  (uint8_t)(TObj3 * 2),
+                  (uint8_t)(TObj4 * 2),
+                  (uint8_t)( (acc[0] + 1) * 100),
+                  (uint8_t)( (acc[1] + 1) * 100),
+                  (uint8_t)( (acc[2] + 1) * 100),
+                  (uint8_t)str[10],
+                  (uint8_t)str[11]
+              };
+              //send data over bluetooth
+              DataCharacteristic.setValue(imuCharArray,12);
+    }
+
+
+//this function receives raw neural network weight values from the mobile application and stores them as a formatted array for application to the neural network activation function
+
+void bleNeuralValueUpdatedHandle(BLECentral& central, BLECharacteristic& characteristic) {
+  const unsigned char* the_buffer = characteristic.value();
+  unsigned char the_length = characteristic.valueLength();
+  String bleRawVal = "";
+  
+  for (byte i = 0; i < the_length; i++){ 
+    String bleRawVal_temp = String(the_buffer[i], HEX); 
+    if(bleRawVal_temp.length() == 1)  bleRawVal += String("0");
+    bleRawVal += bleRawVal_temp;
+  }
+ if(debug){ Serial.print("BLERAWVAL: "); Serial.println(bleRawVal); }
+
+  char neuro_index_buffer1[3];
+  char neuro_index_buffer2[3];
+  char neuro_index_buffer3[3];
+  char neuro_index_buffer4[3];
+  char neuro_index_buffer5[3];
+  char neuro_index_buffer6[3];
+  char neuro_index_buffer7[3];
+  char neuro_index_buffer8[3];
+  char neuro_index_buffer9[3];
+  char neuro_index_buffer10[3];
+  char neuro_index_buffer11[3];
+  char neuro_index_buffer12[3];
+  char neuro_index_buffer13[3];
+  char neuro_index_buffer14[3];
+  char neuro_index_buffer15[3];
+  char neuro_index_buffer16[3];
+  char neuro_index_buffer17[3];
+  char neuro_index_buffer18[3];
+  char neuro_index_buffer19[3];
+  char neuro_index_buffer20[3];
+  
+  bleRawVal.substring(0,2).toCharArray(neuro_index_buffer1, 3);
+  bleRawVal.substring(2,4).toCharArray(neuro_index_buffer2, 3);
+  bleRawVal.substring(4,6).toCharArray(neuro_index_buffer3, 3);
+  bleRawVal.substring(6,8).toCharArray(neuro_index_buffer4, 3);
+  bleRawVal.substring(8,10).toCharArray(neuro_index_buffer5, 3);
+  bleRawVal.substring(10,12).toCharArray(neuro_index_buffer6, 3);
+  bleRawVal.substring(12,14).toCharArray(neuro_index_buffer7, 3);
+  bleRawVal.substring(14,16).toCharArray(neuro_index_buffer8, 3);
+  bleRawVal.substring(16,18).toCharArray(neuro_index_buffer9, 3);
+  bleRawVal.substring(18,20).toCharArray(neuro_index_buffer10, 3);
+  bleRawVal.substring(20,22).toCharArray(neuro_index_buffer11, 3);
+  bleRawVal.substring(22,24).toCharArray(neuro_index_buffer12, 3);
+  bleRawVal.substring(24,26).toCharArray(neuro_index_buffer13, 3);
+  bleRawVal.substring(26,28).toCharArray(neuro_index_buffer14, 3);
+  bleRawVal.substring(28,30).toCharArray(neuro_index_buffer15, 3);
+  bleRawVal.substring(30,32).toCharArray(neuro_index_buffer16, 3);
+  bleRawVal.substring(32,34).toCharArray(neuro_index_buffer17, 3);
+  bleRawVal.substring(34,36).toCharArray(neuro_index_buffer18, 3);
+  bleRawVal.substring(36,38).toCharArray(neuro_index_buffer19, 3);
+  bleRawVal.substring(38,40).toCharArray(neuro_index_buffer20, 3);
+  
+  int neuro_num1 = (int)strtol(neuro_index_buffer1, NULL, 16);
+  int neuro_num2 = (int)strtol(neuro_index_buffer2, NULL, 16);
+  int neuro_num3 = (int)strtol(neuro_index_buffer3, NULL, 16);
+  float neuro_num4 = (float)strtol(neuro_index_buffer4, NULL, 16);
+  float neuro_num5 = (float)strtol(neuro_index_buffer5, NULL, 16);
+  float neuro_num6 = (float)strtol(neuro_index_buffer6, NULL, 16);
+  float neuro_num7 = (float)strtol(neuro_index_buffer7, NULL, 16);
+  float neuro_num8 = (float)strtol(neuro_index_buffer8, NULL, 16);
+  float neuro_num9 = (float)strtol(neuro_index_buffer9, NULL, 16);
+  float neuro_num10 = (float)strtol(neuro_index_buffer10, NULL, 16);
+  float neuro_num11 = (int)strtol(neuro_index_buffer11, NULL, 16);
+  float neuro_num12 = (int)strtol(neuro_index_buffer12, NULL, 16);
+  float neuro_num13 = (int)strtol(neuro_index_buffer13, NULL, 16);
+  float neuro_num14 = (float)strtol(neuro_index_buffer14, NULL, 16);
+  float neuro_num15 = (float)strtol(neuro_index_buffer15, NULL, 16);
+  float neuro_num16 = (float)strtol(neuro_index_buffer16, NULL, 16);
+  float neuro_num17 = (float)strtol(neuro_index_buffer17, NULL, 16);
+  float neuro_num18 = (float)strtol(neuro_index_buffer18, NULL, 16);
+  float neuro_num19 = (float)strtol(neuro_index_buffer19, NULL, 16);
+  float neuro_num20 = (float)strtol(neuro_index_buffer20, NULL, 16);
+
+ if(debug){
+  Serial.print("BASE10: "); Serial.print( neuro_num1 ); 
+  Serial.print(" , "); Serial.print( neuro_num2 );
+  Serial.print(" , "); Serial.print( neuro_num3 );
+  Serial.print(" , "); Serial.print( neuro_num4 );
+  Serial.print(" , "); Serial.print( neuro_num5 );
+  Serial.print(" , "); Serial.print( neuro_num6 );
+  Serial.print(" , "); Serial.print( neuro_num7 );
+  Serial.print(" , "); Serial.print( neuro_num8 );
+  Serial.print(" , "); Serial.print( neuro_num9 );
+  Serial.print(" , "); Serial.print( neuro_num10 );
+  Serial.print(" , "); Serial.print( neuro_num11 ); 
+  Serial.print(" , "); Serial.print( neuro_num12 );
+  Serial.print(" , "); Serial.print( neuro_num13 );
+  Serial.print(" , "); Serial.print( neuro_num14 );
+  Serial.print(" , "); Serial.print( neuro_num15 );
+  Serial.print(" , "); Serial.print( neuro_num16 );
+  Serial.print(" , "); Serial.print( neuro_num17 );
+  Serial.print(" , "); Serial.print( neuro_num18 );
+  Serial.print(" , "); Serial.print( neuro_num19 );
+  Serial.print(" , "); Serial.println( neuro_num20 );
+ }
+  
+  int neuro_value_index = ( neuro_num1 * 100) + neuro_num2;
+
+  float neuro_value_weight1 = neuro_num4*10 + neuro_num5/10 + neuro_num6/1000 + neuro_num7/100000;
+  float neuro_value_weight2 = neuro_num8*10 + neuro_num9/10 + neuro_num10/1000 + neuro_num11/100000;
+  float neuro_value_weight3 = neuro_num12*10 + neuro_num13/10 + neuro_num14/1000 + neuro_num15/100000;
+  float neuro_value_weight4 = neuro_num16*10 + neuro_num17/10 + neuro_num18/1000 + neuro_num19/100000;
+
+  //apply negative sign to weight where needed 
+  //the four neuron signs are represented as a binary array converted to base 10 number in the third packet character  pos/neg,pos/net,pos/neg,pos/neg
+  float posNeg[4] = {1,1,1,1};
+
+  if(     neuro_num3 ==  1){ posNeg[3] = -1;}                                                    //0001
+  else if(neuro_num3 ==  2){ posNeg[2] = -1; }                                                   //0010
+  else if(neuro_num3 ==  3){ posNeg[2] = -1; posNeg[3] = -1;}                                    //0011
+  else if(neuro_num3 ==  4){ posNeg[1] = -1;}                                                    //0100
+  else if(neuro_num3 ==  5){ posNeg[1] = -1; posNeg[3] = -1;}                                    //0101
+  else if(neuro_num3 ==  6){ posNeg[1] = -1; posNeg[2] = -1;}                                    //0110
+  else if(neuro_num3 ==  7){ posNeg[1] = -1; posNeg[2] = -1; posNeg[3] = -1;}                    //0111
+  else if(neuro_num3 ==  8){ posNeg[0] = -1; }                                                   //1000
+  else if(neuro_num3 ==  9){ posNeg[0] = -1; posNeg[3] = -1;}                                    //1001
+  else if(neuro_num3 == 10){ posNeg[0] = -1;  posNeg[2] = -1;}                                   //1010
+  else if(neuro_num3 == 11){ posNeg[0] = -1; posNeg[2] = -1; posNeg[3] = -1;}                    //1011
+  else if(neuro_num3 == 12){ posNeg[0] = -1; posNeg[1] = -1;}                                    //1100
+  else if(neuro_num3 == 13){ posNeg[0] = -1; posNeg[1] = -1; posNeg[3] = -1;}                    //1101
+  else if(neuro_num3 == 14){ posNeg[0] = -1; posNeg[1] = -1; posNeg[2] = -1;}                    //1110
+  else if(neuro_num3 == 15){ posNeg[0] = -1; posNeg[1] = -1; posNeg[2] = -1; posNeg[3] = -1;}    //1111
+
+  neuro_value_weight1 = neuro_value_weight1*posNeg[0];
+  neuro_value_weight2 = neuro_value_weight2*posNeg[1];
+  neuro_value_weight3 = neuro_value_weight3*posNeg[2];
+  neuro_value_weight4 = neuro_value_weight4*posNeg[3];
+
+ if(debug){
+  Serial.print("NEURO_INDEX_VALUES: "); Serial.print( neuro_value_index ); Serial.print(" , "); Serial.print( neuro_value_index + 1 ); Serial.print(" , "); Serial.print( neuro_value_index + 2 ); Serial.print(" , "); Serial.println( neuro_value_index + 3 );
+  Serial.print("NEURO_WEIGHT_VALUE: "); Serial.print( neuro_value_weight1 , 7 ); Serial.print(" , "); Serial.print( neuro_value_weight2 , 7 ); Serial.print(" , "); Serial.print( neuro_value_weight3 , 7 ); Serial.print(" , ");Serial.println( neuro_value_weight4 , 7 );      
+ }
+
+  //add neuron weight to NN network weight array
+  if( (neuro_value_index + 4) < 500){
+      F[neuro_value_index] = neuro_value_weight1;
+      F[neuro_value_index + 1] = neuro_value_weight2;
+      F[neuro_value_index + 2] = neuro_value_weight3;
+      F[neuro_value_index + 3] = neuro_value_weight4;
+  }
+
+  //count # of times weights have been trasnmitted
+  transmittedCounter = transmittedCounter + 4;
+  
+  //** RECEIVE NEURAL NETWORK COMPLETE - HAVE NN - ERROR CHECKING - give up if over 1000
+  if(transmittedCounter > 994 && flag_haveNeural == false){
+      flag_haveNeural = true;
+      //check weights
+      for(int e = 0; e < 495; e++){
+          if(F[e] > 98){ 
+            flag_haveNeural = false;
+            if(debug){ Serial.print("!ERROR AT NEURON# "); Serial.print( e ); Serial.print("   VAL "); Serial.println( F[e] ); }
+          }
+      }
+      if(flag_haveNeural == true && debug){ for(int e = 0; e < 495; e++){ Serial.print("++NEURON #: "); Serial.print( e ); Serial.print("   VAL: "); Serial.println( F[e] );  } } //display completed NN
+  }
+  
+  if(debug){ Serial.print("# TRANSMITS: "); Serial.println( transmittedCounter ); }
+
+  if(debug){ BLEUtil::printBuffer(characteristic.value(), characteristic.valueLength()); }
+ // if(debug) delay(1000);
+  delay(10);
+}
+
+
+
+//this function contains the neural network activation function without weights. All values in array F are neural network weights with the exception of the inputs (F[3], F[5], F[7] etc.)
+
+bool detect(float input[]){
+//** For synaptic.js app.neuralNet = new app.Architect.LSTM(5,5,2,1);  
+F[3] = input[0]; 
+F[5] = input[1]; 
+F[7] = input[2]; 
+F[9] = input[3]; 
+F[11] = input[4]; 
+
+F[0] = F[1];F[1] = F[2];F[1] += F[3] * F[4];F[1] += F[5] * F[6];F[1] += F[7] * F[8];F[1] += F[9] * F[10];F[1] += F[11] * F[12];F[1] += F[13] * F[14];F[1] += F[15] * F[16];F[1] += F[17] * F[18];F[1] += F[19] * F[20];F[1] += F[21] * F[22];F[23] = (1 / (1 + exp(-F[1])));F[24] = F[23] * (1 - F[23]);F[25] = F[23];F[26] = F[23];F[27] = F[23];F[28] = F[23];F[29] = F[23];
+F[30] = F[31];F[31] = F[32];F[31] += F[3] * F[33];F[31] += F[5] * F[34];F[31] += F[7] * F[35];F[31] += F[9] * F[36];F[31] += F[11] * F[37];F[31] += F[13] * F[38];F[31] += F[15] * F[39];F[31] += F[17] * F[40];F[31] += F[19] * F[41];F[31] += F[21] * F[42];F[43] = (1 / (1 + exp(-F[31])));F[44] = F[43] * (1 - F[43]);F[45] = F[43];F[46] = F[43];F[47] = F[43];F[48] = F[43];F[49] = F[43];
+F[50] = F[51];F[51] = F[52];F[51] += F[3] * F[53];F[51] += F[5] * F[54];F[51] += F[7] * F[55];F[51] += F[9] * F[56];F[51] += F[11] * F[57];F[51] += F[13] * F[58];F[51] += F[15] * F[59];F[51] += F[17] * F[60];F[51] += F[19] * F[61];F[51] += F[21] * F[62];F[63] = (1 / (1 + exp(-F[51])));F[64] = F[63] * (1 - F[63]);F[65] = F[63];F[66] = F[63];F[67] = F[63];F[68] = F[63];F[69] = F[63];
+F[70] = F[71];F[71] = F[72];F[71] += F[3] * F[73];F[71] += F[5] * F[74];F[71] += F[7] * F[75];F[71] += F[9] * F[76];F[71] += F[11] * F[77];F[71] += F[13] * F[78];F[71] += F[15] * F[79];F[71] += F[17] * F[80];F[71] += F[19] * F[81];F[71] += F[21] * F[82];F[83] = (1 / (1 + exp(-F[71])));F[84] = F[83] * (1 - F[83]);F[85] = F[83];F[86] = F[83];F[87] = F[83];F[88] = F[83];F[89] = F[83];
+F[90] = F[91];F[91] = F[92];F[91] += F[3] * F[93];F[91] += F[5] * F[94];F[91] += F[7] * F[95];F[91] += F[9] * F[96];F[91] += F[11] * F[97];F[91] += F[13] * F[98];F[91] += F[15] * F[99];F[91] += F[17] * F[100];F[91] += F[19] * F[101];F[91] += F[21] * F[102];F[103] = (1 / (1 + exp(-F[91])));F[104] = F[103] * (1 - F[103]);F[105] = F[103];F[106] = F[103];F[107] = F[103];F[108] = F[103];F[109] = F[103];
+F[110] = F[111];F[111] = F[112];F[111] += F[3] * F[113];F[111] += F[5] * F[114];F[111] += F[7] * F[115];F[111] += F[9] * F[116];F[111] += F[11] * F[117];F[111] += F[13] * F[118];F[111] += F[15] * F[119];F[111] += F[17] * F[120];F[111] += F[19] * F[121];F[111] += F[21] * F[122];F[123] = (1 / (1 + exp(-F[111])));F[124] = F[123] * (1 - F[123]);F[125] = F[123];
+F[126] = F[127];F[127] = F[128];F[127] += F[3] * F[129];F[127] += F[5] * F[130];F[127] += F[7] * F[131];F[127] += F[9] * F[132];F[127] += F[11] * F[133];F[127] += F[13] * F[134];F[127] += F[15] * F[135];F[127] += F[17] * F[136];F[127] += F[19] * F[137];F[127] += F[21] * F[138];F[139] = (1 / (1 + exp(-F[127])));F[140] = F[139] * (1 - F[139]);F[141] = F[139];
+F[142] = F[143];F[143] = F[144];F[143] += F[3] * F[145];F[143] += F[5] * F[146];F[143] += F[7] * F[147];F[143] += F[9] * F[148];F[143] += F[11] * F[149];F[143] += F[13] * F[150];F[143] += F[15] * F[151];F[143] += F[17] * F[152];F[143] += F[19] * F[153];F[143] += F[21] * F[154];F[155] = (1 / (1 + exp(-F[143])));F[156] = F[155] * (1 - F[155]);F[157] = F[155];
+F[158] = F[159];F[159] = F[160];F[159] += F[3] * F[161];F[159] += F[5] * F[162];F[159] += F[7] * F[163];F[159] += F[9] * F[164];F[159] += F[11] * F[165];F[159] += F[13] * F[166];F[159] += F[15] * F[167];F[159] += F[17] * F[168];F[159] += F[19] * F[169];F[159] += F[21] * F[170];F[171] = (1 / (1 + exp(-F[159])));F[172] = F[171] * (1 - F[171]);F[173] = F[171];
+F[174] = F[175];F[175] = F[176];F[175] += F[3] * F[177];F[175] += F[5] * F[178];F[175] += F[7] * F[179];F[175] += F[9] * F[180];F[175] += F[11] * F[181];F[175] += F[13] * F[182];F[175] += F[15] * F[183];F[175] += F[17] * F[184];F[175] += F[19] * F[185];F[175] += F[21] * F[186];F[187] = (1 / (1 + exp(-F[175])));F[188] = F[187] * (1 - F[187]);F[189] = F[187];
+F[190] = F[191];F[191] = F[125] * F[192] * F[191] + F[193];F[191] += F[3] * F[194] * F[25];F[191] += F[5] * F[195] * F[26];F[191] += F[7] * F[196] * F[27];F[191] += F[9] * F[197] * F[28];F[191] += F[11] * F[198] * F[29];F[13] = (1 / (1 + exp(-F[191])));F[199] = F[13] * (1 - F[13]);
+F[200] = F[201];F[201] = F[141] * F[202] * F[201] + F[203];F[201] += F[3] * F[204] * F[45];F[201] += F[5] * F[205] * F[46];F[201] += F[7] * F[206] * F[47];F[201] += F[9] * F[207] * F[48];F[201] += F[11] * F[208] * F[49];F[15] = (1 / (1 + exp(-F[201])));F[209] = F[15] * (1 - F[15]);
+F[210] = F[211];F[211] = F[157] * F[212] * F[211] + F[213];F[211] += F[3] * F[214] * F[65];F[211] += F[5] * F[215] * F[66];F[211] += F[7] * F[216] * F[67];F[211] += F[9] * F[217] * F[68];F[211] += F[11] * F[218] * F[69];F[17] = (1 / (1 + exp(-F[211])));F[219] = F[17] * (1 - F[17]);
+F[220] = F[221];F[221] = F[173] * F[222] * F[221] + F[223];F[221] += F[3] * F[224] * F[85];F[221] += F[5] * F[225] * F[86];F[221] += F[7] * F[226] * F[87];F[221] += F[9] * F[227] * F[88];F[221] += F[11] * F[228] * F[89];F[19] = (1 / (1 + exp(-F[221])));F[229] = F[19] * (1 - F[19]);
+F[230] = F[231];F[231] = F[189] * F[232] * F[231] + F[233];F[231] += F[3] * F[234] * F[105];F[231] += F[5] * F[235] * F[106];F[231] += F[7] * F[236] * F[107];F[231] += F[9] * F[237] * F[108];F[231] += F[11] * F[238] * F[109];F[21] = (1 / (1 + exp(-F[231])));F[239] = F[21] * (1 - F[21]);
+F[240] = F[241];F[241] = F[242];F[241] += F[3] * F[243];F[241] += F[5] * F[244];F[241] += F[7] * F[245];F[241] += F[9] * F[246];F[241] += F[11] * F[247];F[241] += F[13] * F[248];F[241] += F[15] * F[249];F[241] += F[17] * F[250];F[241] += F[19] * F[251];F[241] += F[21] * F[252];F[253] = (1 / (1 + exp(-F[241])));F[254] = F[253] * (1 - F[253]);F[255] = F[253];
+F[256] = F[257];F[257] = F[258];F[257] += F[3] * F[259];F[257] += F[5] * F[260];F[257] += F[7] * F[261];F[257] += F[9] * F[262];F[257] += F[11] * F[263];F[257] += F[13] * F[264];F[257] += F[15] * F[265];F[257] += F[17] * F[266];F[257] += F[19] * F[267];F[257] += F[21] * F[268];F[269] = (1 / (1 + exp(-F[257])));F[270] = F[269] * (1 - F[269]);F[271] = F[269];
+F[272] = F[273];F[273] = F[274];F[273] += F[3] * F[275];F[273] += F[5] * F[276];F[273] += F[7] * F[277];F[273] += F[9] * F[278];F[273] += F[11] * F[279];F[273] += F[13] * F[280];F[273] += F[15] * F[281];F[273] += F[17] * F[282];F[273] += F[19] * F[283];F[273] += F[21] * F[284];F[285] = (1 / (1 + exp(-F[273])));F[286] = F[285] * (1 - F[285]);F[287] = F[285];
+F[288] = F[289];F[289] = F[290];F[289] += F[3] * F[291];F[289] += F[5] * F[292];F[289] += F[7] * F[293];F[289] += F[9] * F[294];F[289] += F[11] * F[295];F[289] += F[13] * F[296];F[289] += F[15] * F[297];F[289] += F[17] * F[298];F[289] += F[19] * F[299];F[289] += F[21] * F[300];F[301] = (1 / (1 + exp(-F[289])));F[302] = F[301] * (1 - F[301]);F[303] = F[301];
+F[304] = F[305];F[305] = F[306];F[305] += F[3] * F[307];F[305] += F[5] * F[308];F[305] += F[7] * F[309];F[305] += F[9] * F[310];F[305] += F[11] * F[311];F[305] += F[13] * F[312];F[305] += F[15] * F[313];F[305] += F[17] * F[314];F[305] += F[19] * F[315];F[305] += F[21] * F[316];F[317] = (1 / (1 + exp(-F[305])));F[318] = F[317] * (1 - F[317]);F[319] = F[317];
+F[320] = F[321];F[321] = F[322];F[321] += F[3] * F[323];F[321] += F[5] * F[324];F[321] += F[7] * F[325];F[321] += F[9] * F[326];F[321] += F[11] * F[327];F[321] += F[13] * F[328];F[321] += F[15] * F[329];F[321] += F[17] * F[330];F[321] += F[19] * F[331];F[321] += F[21] * F[332];F[321] += F[333] * F[334];F[321] += F[335] * F[336];F[337] = (1 / (1 + exp(-F[321])));F[338] = F[337] * (1 - F[337]);F[339] = F[337];F[340] = F[337];F[341] = F[337];F[342] = F[337];F[343] = F[337];F[344] = F[337];F[345] = F[337];F[346] = F[337];F[347] = F[337];F[348] = F[337];
+F[349] = F[350];F[350] = F[351];F[350] += F[3] * F[352];F[350] += F[5] * F[353];F[350] += F[7] * F[354];F[350] += F[9] * F[355];F[350] += F[11] * F[356];F[350] += F[13] * F[357];F[350] += F[15] * F[358];F[350] += F[17] * F[359];F[350] += F[19] * F[360];F[350] += F[21] * F[361];F[350] += F[333] * F[362];F[350] += F[335] * F[363];F[364] = (1 / (1 + exp(-F[350])));F[365] = F[364] * (1 - F[364]);F[366] = F[364];F[367] = F[364];F[368] = F[364];F[369] = F[364];F[370] = F[364];F[371] = F[364];F[372] = F[364];F[373] = F[364];F[374] = F[364];F[375] = F[364];
+F[376] = F[377];F[377] = F[378];F[377] += F[3] * F[379];F[377] += F[5] * F[380];F[377] += F[7] * F[381];F[377] += F[9] * F[382];F[377] += F[11] * F[383];F[377] += F[13] * F[384];F[377] += F[15] * F[385];F[377] += F[17] * F[386];F[377] += F[19] * F[387];F[377] += F[21] * F[388];F[377] += F[333] * F[389];F[377] += F[335] * F[390];F[391] = (1 / (1 + exp(-F[377])));F[392] = F[391] * (1 - F[391]);F[393] = F[391];
+F[394] = F[395];F[395] = F[396];F[395] += F[3] * F[397];F[395] += F[5] * F[398];F[395] += F[7] * F[399];F[395] += F[9] * F[400];F[395] += F[11] * F[401];F[395] += F[13] * F[402];F[395] += F[15] * F[403];F[395] += F[17] * F[404];F[395] += F[19] * F[405];F[395] += F[21] * F[406];F[395] += F[333] * F[407];F[395] += F[335] * F[408];F[409] = (1 / (1 + exp(-F[395])));F[410] = F[409] * (1 - F[409]);F[411] = F[409];
+F[412] = F[413];F[413] = F[393] * F[414] * F[413] + F[415];F[413] += F[3] * F[416] * F[339];F[413] += F[5] * F[417] * F[340];F[413] += F[7] * F[418] * F[341];F[413] += F[9] * F[419] * F[342];F[413] += F[11] * F[420] * F[343];F[413] += F[13] * F[421] * F[344];F[413] += F[15] * F[422] * F[345];F[413] += F[17] * F[423] * F[346];F[413] += F[19] * F[424] * F[347];F[413] += F[21] * F[425] * F[348];F[333] = (1 / (1 + exp(-F[413])));F[426] = F[333] * (1 - F[333]);
+F[427] = F[428];F[428] = F[411] * F[429] * F[428] + F[430];F[428] += F[3] * F[431] * F[366];F[428] += F[5] * F[432] * F[367];F[428] += F[7] * F[433] * F[368];F[428] += F[9] * F[434] * F[369];F[428] += F[11] * F[435] * F[370];F[428] += F[13] * F[436] * F[371];F[428] += F[15] * F[437] * F[372];F[428] += F[17] * F[438] * F[373];F[428] += F[19] * F[439] * F[374];F[428] += F[21] * F[440] * F[375];F[335] = (1 / (1 + exp(-F[428])));F[441] = F[335] * (1 - F[335]);
+F[442] = F[443];F[443] = F[444];F[443] += F[3] * F[445];F[443] += F[5] * F[446];F[443] += F[7] * F[447];F[443] += F[9] * F[448];F[443] += F[11] * F[449];F[443] += F[13] * F[450];F[443] += F[15] * F[451];F[443] += F[17] * F[452];F[443] += F[19] * F[453];F[443] += F[21] * F[454];F[443] += F[333] * F[455];F[443] += F[335] * F[456];F[457] = (1 / (1 + exp(-F[443])));F[458] = F[457] * (1 - F[457]);F[459] = F[457];
+F[460] = F[461];F[461] = F[462];F[461] += F[3] * F[463];F[461] += F[5] * F[464];F[461] += F[7] * F[465];F[461] += F[9] * F[466];F[461] += F[11] * F[467];F[461] += F[13] * F[468];F[461] += F[15] * F[469];F[461] += F[17] * F[470];F[461] += F[19] * F[471];F[461] += F[21] * F[472];F[461] += F[333] * F[473];F[461] += F[335] * F[474];F[475] = (1 / (1 + exp(-F[461])));F[476] = F[475] * (1 - F[475]);F[477] = F[475];
+F[478] = F[479];F[479] = F[480];F[479] += F[13] * F[481] * F[255];F[479] += F[15] * F[482] * F[271];F[479] += F[17] * F[483] * F[287];F[479] += F[19] * F[484] * F[303];F[479] += F[21] * F[485] * F[319];F[479] += F[333] * F[486] * F[459];F[479] += F[335] * F[487] * F[477];F[479] += F[3] * F[488];F[479] += F[5] * F[489];F[479] += F[7] * F[490];F[479] += F[9] * F[491];F[479] += F[11] * F[492];F[493] = (1 / (1 + exp(-F[479])));F[494] = F[493] * (1 - F[493]);
+
+  float output[2];
+  output[0] = F[493];
+  if(debug){ Serial.print("NN OUTPUT: "); Serial.println(output[0]); }
+  
+  if(output[0] > 0.8) return true;
+  else return false;
+  //return output;
+}
+
+
+
+
+//SOFTWARE FOR MOBILE (phone, tablet, etc.) APP
+//SOFTWARE FOR MOBILE (phone, tablet, etc.) APP
+//SOFTWARE FOR MOBILE (phone, tablet, etc.) APP
+//written in the Javascript programming langauge
+
+
+//this is the core of the mobile app, it shows how data is recieved, and for training as well as how neural network weights are sent to the wearable device once training is complete.
+
+  // Start accelerometer notification.
+    device.enableNotification(
+        app.deviceUUID.MOVEMENT_DATA,
+        function(data) {
+            app.showInfo('Status: Data stream active');
+            var dataArray = new Uint8Array(data);
+            //	console.log(dataArray);// debug
+
+            /*************************** SEND APP STATUS TO DEVICE *****************************/
+            app.alertDetect();
+
+            //parse data from sensors
+            var values = app.getAccelerometerValues(dataArray); //return [roll, pitch, proximity, thermo1, thermo2, thermo3, thermo4, accelX, accelY, accelZ];
+
+            //      pitch = (180/3.141592) * ( atan2( acc[0], sqrt( acc[1] * acc[1] + acc[2] * acc[2])) );
+            //		roll = (180/3.141592) * ( atan2(-acc[1], -acc[2]) );
+
+
+            /*************************** APPLY MLP NEURAL NET ***********************************/
+            app.neuroScore = app.neuralNet.activate([
+                //	(values[7]/200),
+                //	(values[8]/200),
+                //	(values[9]/200),
+                (values[2] / 255),
+                (values[3] / 102),
+                (values[4] / 102),
+                (values[5] / 102),
+                (values[6] / 102)
+            ]);
+
+            //from 0-1 to 0-100%
+            app.neuroScore = app.neuroScore * 100;
+
+            //round to three sig digits
+            app.neuroScore = (Math.round(app.neuroScore * 1000)) / 1000;
+
+
+
+            if (app.neuroScore > 0.95){ app.alertDetect(); }
+
+            /**************************** TRAIN TRUE FOR ON TARGET ******************************/
+            if (app.getTrueFlag) {
+                //		if(app.getDelay == 0){ //skip to slow down
+                //Let device know we are gathering true data
+                app.varState = 2;
+
+                app.trainingDataTrue.push({
+                    input: [ /*(values[7]/200), (values[8]/200), (values[9]/200),*/ (values[2] / 255), (values[3] / 102), (values[4] / 102), (values[5] / 102), (values[6] / 102)],
+                    output: [1]
+                });
+
+                //for averages
+                //return [roll, pitch, proximity, thermo1, thermo2, thermo3, thermo4, accelX, accelY, accelZ];
+                app.trainingAngleTrueX.push(values[7]); //for average accel values
+                app.trainingAngleTrueY.push(values[8]); //for average accel values
+                app.trainingAngleTrueZ.push(values[9]); //for average accel values
+
+                document.getElementById('score').innerHTML = " ...gathering true training data";
+                document.getElementById('numTrueData').innerHTML = app.trainingDataTrue.length;
+                //		}
+            }
+            /**************************** TRAIN FALSE FOR OFF TARGET ******************************/
+            else if (app.getFalseFlag) {
+                //		if(app.getDelay == 0){ //skip to slow down
+                //Let device know we are gathering true data
+                app.varState = 3;
+
+                app.trainingDataFalse.push({
+                    input: [ /*(values[7]/200), (values[8]/200), (values[9]/200),*/ (values[2] / 255), (values[3] / 102), (values[4] / 102), (values[5] / 102), (values[6] / 102)],
+                    output: [0]
+                });
+                document.getElementById('score').innerHTML = " ...gathering false training data";
+                document.getElementById('numFalseData').innerHTML = app.trainingDataFalse.length;
+                //		}
+            } else if (app.neuroData.transmitCount > 5) {
+                document.getElementById('score').innerHTML = "Neural Net Score: " + app.neuroScore + "%";
+            } else document.getElementById('score').innerHTML = "Neural Net standing by...";
+
+            /**************** MANAGE DELAY *********************/
+            //	app.getDelay = app.getDelay + 1;
+            //	if(app.getDelay > 2){ app.getDelay = 0;}
+
+            /********************************* TRAIN NEURAL NET ***********************************/
+            /********************************* TRAIN NEURAL NET ***********************************/
+            if (app.trainFlag) {
+
+                //have NN weights to send
+                app.varState = 2;
+                app.neuroData.transmitCount = 0;
+
+                app.showInfo('Status: Training...');
+                console.log("**Training...");
+
+                //Recreate neural net and trainer
+                //	app.neuralNet = new app.Architect.Perceptron(5,6,6,1);
+                app.neuralNet = new app.Architect.LSTM(5, 5, 2, 1);
+                app.trainer = new app.Trainer(app.neuralNet);
+
+                var trainingData = app.trainingDataTrue.concat(app.trainingDataFalse);
+
+                app.trainer.train(trainingData, {
+                    rate: 0.06,
+                    iterations: 15000,
+                    error: 0.06,
+                    shuffle: true,
+                    log: 1000,
+                    cost: app.Trainer.cost.CROSS_ENTROPY
+                });
+                app.showInfo('Status: Training Completed');
+                console.log("**End Training...");
+
+                //make NN display value larger now that we have something to see
+                $(".senseVal.neuralVal").css("font-size", "26px");
+                $(".senseVal.neuralVal").css("font-weight", "800");
+
+                //ready to send
+                if( $('#trainButton').hasClass('green') ){
+			        $('#sendButton').addClass('green');  
+			        $('#sendButton').removeClass('gray'); 
+			    }
+
+			    app.neuroHaveFlag = true;
+                app.trainFlag = false;
+
+			}
+
+			if (app.neuroSendFlag) {
+
+                //export NN + activation code
+
+                //clear everything but key values from stored NN
+                app.neuralNet.clear();
+
+                //export optimized weights and activation function
+                var standalone = app.neuralNet.standalone();
+
+                //convert to string for parsing
+                standalone = standalone.toString();
+
+                console.log(standalone);
+
+                //split off weights & get rid of activation stuff
+                standalone = standalone.split("}");
+                standalone = standalone[0];
+
+                //split off starting functiony stuff
+                standalone = standalone.split("{");
+                standalone = standalone.reverse();
+                standalone = standalone[0];
+
+                //	console.log(standalone);
+
+                //remove line breaks
+                standalone = standalone.replace(/(\r\n|\n|\r)/gm, "");
+
+
+                standalone = standalone.split(",");
+                console.log(standalone);
+
+                     //PROCESS ARRAY OF RAW DATA STRINGS
+                for (var j = 0; j < standalone.length; j++) {
+
+                    var splitLine = standalone[j].split(":");
+
+                    var strIndex = splitLine[0];
+                    var strWeight = splitLine[1];
+
+                    var floatIndex = parseFloat(strIndex);
+                    var floatWeight = parseFloat(strWeight);
+
+                    //		console.log("1: " + strIndex + " 2: " + strWeight);
+
+                    //***PROCESS INDEX VALUE
+                    var dataNeuro = new Uint8Array(20);
+
+                    dataNeuro[0] = "00";
+                    dataNeuro[1] = "00";
+                    dataNeuro[2] = "00";
+                    dataNeuro[3] = "00";
+                    dataNeuro[4] = "00";
+                    dataNeuro[5] = "00";
+                    dataNeuro[6] = "00";
+                    dataNeuro[7] = "00";
+                    dataNeuro[8] = "00";
+                    dataNeuro[9] = "00";
+                    dataNeuro[10] = "00";
+                    dataNeuro[11] = "00";
+                    dataNeuro[12] = "00";
+                    dataNeuro[13] = "00";
+                    dataNeuro[14] = "00";
+                    dataNeuro[15] = "00";
+                    dataNeuro[16] = "00";
+                    dataNeuro[17] = "00";
+                    dataNeuro[18] = "00";
+                    dataNeuro[19] = "00";
+
+                    //index to first two characters of data array
+                    if (floatIndex != 0) {
+                        //floatIndex = floatIndex / 10000; 
+                        strIndex = floatIndex.toString();
+                        strIndex = strIndex.split(".")[0]; //get rid of period and trailing digits
+                        //strIndex = parseFloat( strIndex ).toString(16);
+
+                        if (strIndex.length == 3) strIndex = '0' + strIndex;
+                        else if (strIndex.length == 2) strIndex = '00' + strIndex;
+                        else if (strIndex.length == 1) strIndex = '000' + strIndex;
+                        parseInt(strIndex, 10);
+
+                        
+
+                        dataNeuro[0] = strIndex.charAt(0) + strIndex.charAt(1);
+                        dataNeuro[1] = strIndex.charAt(2) + strIndex.charAt(3);
+                    }
+
+
+                    //third position in data for +/- weight
+                    dataNeuro[2] = "00"; //default positive
+                    if (floatWeight < 0) {
+                        dataNeuro[2] = "01"; //weight is negative
+                        floatWeight = floatWeight * (-1); //absolute value
+                    }
+
+                    if (floatWeight != 0) { //if zero then already taken care of
+
+                        floatWeight = floatWeight * 100000; //push back beyond decimal for storage
+
+                        strWeight = floatWeight.toString();
+                        strWeight = strWeight.split(".")[0]; //get rid of period and trailing digits
+
+                        //	strWeight = parseFloat( strWeight ).toString(16);
+
+
+                        if (strWeight.length == 7) strWeight = '0' + strWeight;
+                        else if (strWeight.length == 6) strWeight = '00' + strWeight;
+                        else if (strWeight.length == 5) strWeight = '000' + strWeight;
+                        else if (strWeight.length == 4) strWeight = '0000' + strWeight;
+                        else if (strWeight.length == 3) strWeight = '00000' + strWeight;
+                        else if (strWeight.length == 2) strWeight = '000000' + strWeight;
+                        else if (strWeight.length == 1) strWeight = '0000000' + strWeight;
+
+                        console.log("strWeight: " + strWeight + " stIndex: " + strIndex + " [2]: " + dataNeuro[2] + " [3]: " + dataNeuro[3] + " [4]: " + dataNeuro[4] + " [5]: " + dataNeuro[5] + "  [6]: " + dataNeuro[6]);
+
+                        dataNeuro[3] = strWeight.charAt(0) + strWeight.charAt(1);
+                        dataNeuro[4] = strWeight.charAt(2) + strWeight.charAt(3);
+                        dataNeuro[5] = strWeight.charAt(4) + strWeight.charAt(5);
+                        dataNeuro[6] = strWeight.charAt(6) + strWeight.charAt(7);
+                        
+                    }
+
+                    //*** Load N weight into NN network weight array 
+                    var parsedIndex = parseInt(strIndex, 10);
+                    app.neuroData.weights[parsedIndex] = dataNeuro;
+
+                } //end of single NN send
+
+                //**Compress weight data array from one neuron per packet to three neurons per packet
+                var compressedCount = 0;
+
+                for (var u = 0; u < standalone.length + 3; u++) {
+
+                    var negPos = ["0", "0", "0", "0"];
+
+                    var dataNeuroC = new Uint8Array(20);
+                    dataNeuroC[0] = "00";
+                    dataNeuroC[1] = "00";
+                    dataNeuroC[2] = "00";
+                    dataNeuroC[3] = "99";
+                    dataNeuroC[4] = "00";
+                    dataNeuroC[5] = "00";
+                    dataNeuroC[6] = "00";
+                    dataNeuroC[7] = "99";
+                    dataNeuroC[8] = "00";
+                    dataNeuroC[9] = "00";
+                    dataNeuroC[10] = "00";
+                    dataNeuroC[11] = "99";
+                    dataNeuroC[12] = "00";
+                    dataNeuroC[13] = "00";
+                    dataNeuroC[14] = "00";
+                    dataNeuroC[15] = "99";
+                    dataNeuroC[16] = "00";
+                    dataNeuroC[17] = "00";
+                    dataNeuroC[18] = "00";
+                    dataNeuroC[19] = "99";
+
+                    if (u < standalone.length) {
+                        dataNeuroC[0] = app.neuroData.weights[u][0];
+                        dataNeuroC[1] = app.neuroData.weights[u][1];
+                        dataNeuroC[3] = app.neuroData.weights[u][3];
+                        dataNeuroC[4] = app.neuroData.weights[u][4];
+                        dataNeuroC[5] = app.neuroData.weights[u][5];
+                        dataNeuroC[6] = app.neuroData.weights[u][6];
+                        if (app.neuroData.weights[u][2] == "01") negPos[0] = "1";
+                    }
+
+                    if ((u + 1) < standalone.length) {
+                        dataNeuroC[7] = app.neuroData.weights[u + 1][3];
+                        dataNeuroC[8] = app.neuroData.weights[u + 1][4];
+                        dataNeuroC[9] = app.neuroData.weights[u + 1][5];
+                        dataNeuroC[10] = app.neuroData.weights[u + 1][6];
+                        if (app.neuroData.weights[u + 1][2] == "01") negPos[1] = "1";
+                    } 
+
+                    if ((u + 2) < standalone.length) {
+                        dataNeuroC[11] = app.neuroData.weights[u + 2][3];
+                        dataNeuroC[12] = app.neuroData.weights[u + 2][4];
+                        dataNeuroC[13] = app.neuroData.weights[u + 2][5];
+                        dataNeuroC[14] = app.neuroData.weights[u + 2][6];
+                        if (app.neuroData.weights[u + 2][2] == "01") negPos[2] = "1";
+                    } 
+
+                    if ((u + 3) < standalone.length) {
+                        dataNeuroC[15] = app.neuroData.weights[u + 3][3];
+                        dataNeuroC[16] = app.neuroData.weights[u + 3][4];
+                        dataNeuroC[17] = app.neuroData.weights[u + 3][5];
+                        dataNeuroC[18] = app.neuroData.weights[u + 3][6];
+                        if (app.neuroData.weights[u + 3][2] == "01") negPos[3] = "1";
+                    }
+                    
+                    //convert binary ps/neg array string to merged base 10
+                    if(negPos[0]      == "0" && negPos[1] == "0" && negPos[2] == "0" && negPos[3] == "0") dataNeuroC[2] = "00";
+                    else if(negPos[0] == "0" && negPos[1] == "0" && negPos[2] == "0" && negPos[3] == "1") dataNeuroC[2] = "01";
+                    else if(negPos[0] == "0" && negPos[1] == "0" && negPos[2] == "1" && negPos[3] == "0") dataNeuroC[2] = "02";
+                    else if(negPos[0] == "0" && negPos[1] == "0" && negPos[2] == "1" && negPos[3] == "1") dataNeuroC[2] = "03";
+                    else if(negPos[0] == "0" && negPos[1] == "1" && negPos[2] == "0" && negPos[3] == "0") dataNeuroC[2] = "04"; 
+                    else if(negPos[0] == "0" && negPos[1] == "1" && negPos[2] == "0" && negPos[3] == "1") dataNeuroC[2] = "05"; //5   //0101
+                    else if(negPos[0] == "0" && negPos[1] == "1" && negPos[2] == "1" && negPos[3] == "0") dataNeuroC[2] = "06";
+                    else if(negPos[0] == "0" && negPos[1] == "1" && negPos[2] == "1" && negPos[3] == "1") dataNeuroC[2] = "07";
+                    else if(negPos[0] == "1" && negPos[1] == "0" && negPos[2] == "0" && negPos[3] == "0") dataNeuroC[2] = "08";
+                    else if(negPos[0] == "1" && negPos[1] == "0" && negPos[2] == "0" && negPos[3] == "1") dataNeuroC[2] = "09"; //9  //1001
+                    else if(negPos[0] == "1" && negPos[1] == "0" && negPos[2] == "1" && negPos[3] == "0") dataNeuroC[2] = "10"; //10   //1010
+                    else if(negPos[0] == "1" && negPos[1] == "0" && negPos[2] == "1" && negPos[3] == "1") dataNeuroC[2] = "11"; //11   //1011
+                    else if(negPos[0] == "1" && negPos[1] == "1" && negPos[2] == "0" && negPos[3] == "0") dataNeuroC[2] = "12";
+                    else if(negPos[0] == "1" && negPos[1] == "1" && negPos[2] == "0" && negPos[3] == "1") dataNeuroC[2] = "13"; //13 //1101
+                    else if(negPos[0] == "1" && negPos[1] == "1" && negPos[2] == "1" && negPos[3] == "0") dataNeuroC[2] = "14";
+                    else if(negPos[0] == "1" && negPos[1] == "1" && negPos[2] == "1" && negPos[3] == "1") dataNeuroC[2] = "15";
+                    
+
+                    app.neuroData.weights_compressed.push(dataNeuroC);
+
+                    console.log("Compresion index C/U: " + compressedCount + " / " + u);
+                    console.log("Compressed dataNeuroC: " + dataNeuroC);
+
+                    u = u + 3; //every 4th value
+                    compressedCount++;
+                }
+
+                //NOW COMPRESSED TO 4 NEURONS PER BLE PACKET
+                app.neuroData.weights = app.neuroData.weights_compressed;
+
+                for (var d = 0; d < app.neuroData.weights.length; d++) {
+                    console.log("app.neuroData.weights: " + app.neuroData.weights[d]);
+                }
+
+                app.neuroSendFlag = false;
+            }
+
+            var numSend = 2;
+            for (var r = 0; r < numSend; r++) { //send multiple N weights
+
+                if ((app.neuroSendFlag == true) && (app.neuroData.transmitCount < 256)) {
+
+                    console.log("NEURO INDEX: " + app.neuroData.sendIndex);
+                    console.log("NEURO VAL: " + app.neuroData.weights[app.neuroData.sendIndex]);
+
+                    app.device.writeCharacteristic(
+                        '0000a005-0000-1000-8000-00805f9b34fb',
+                        app.neuroData.weights[app.neuroData.sendIndex],
+                        function() {
+                            console.log('Neuro value sent successfully!');
+                            app.neuroData.transmitCount = app.neuroData.transmitCount + 1;
+
+                        },
+                        function(error) {
+                            console.log('Neuro value send failed: ' + error)
+                        }
+                    );
+
+                    if (app.neuroData.transmitCount < 256) app.showInfo("Sending neural network: " + app.neuroData.transmitCount + "/255"); //document.getElementById('score').innerHTML = "Sending neural network: " + app.neuroData.transmitCount + "/1000";
+
+                    app.neuroData.sendIndex++; //cycle to next NN neuron weight
+
+                    if (app.neuroData.sendIndex > (app.neuroData.weights.length - 1)) app.neuroData.sendIndex = 0; //start over again
+                }
+            }
+            //graph data in app UI
+
+            //Add NN value
+            values[7] = (100 - Math.round(app.neuroScore));
+            app.drawDiagram(values);
+        },
+        function(errorCode) {
+            console.log('Error: enableNotification: ' + errorCode + '.');
+        });
+
+};
