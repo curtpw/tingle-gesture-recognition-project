@@ -10,7 +10,6 @@
 #include <BLEPeripheral.h>    //bluetooth
 #include <BLEUtil.h>
 #include <Wire.h>
-//#include <math.h>
 #include <KX126_SPI.h>        //accelerometer
 #include <VL6180X.h>          //distance sensor
 
@@ -18,11 +17,11 @@
 /********************************************************************************************************/
 /************************ CONSTANTS / SYSTEM VAR ********************************************************/
 /********************************************************************************************************/
-bool  debug = true;        //turn serial on/off to get data or turn up sample rate
-bool  debug_time = true;    //turn loop component time debug on/off
+bool  debug = false;        //turn serial on/off to get data or turn up sample rate
+bool  debug_time = false;    //turn loop component time debug on/off
 
 
-int   speedHz = 16; //throttled loop speed - native max loop speed is about 35 ms or 28Hz
+int   speedHz = 8; //throttled loop speed - native max loop speed is about 35 ms or 28Hz
 float speedMs = 1000 / speedHz;  //native max loop speed is 62.5 ms or 16Hz
   
 float detect_objT_lowpass =    80;
@@ -129,6 +128,9 @@ int   limit_stopRepeatDetect = 200;
     float TObj[4] = {0,0,0,0};
     float TAmb[4] = {0,0,0,0};
     float TAmbAv;
+
+  //vl6180x Distance
+    float distance = 0;
  
   //KX126 Accelerometer
     // pins used for the connection with the sensor
@@ -253,6 +255,7 @@ void blePeripheralConnectHandler(BLECentral& central) {
     Serial.print(F("Connected event, central: "));
     Serial.println(central.address());
   }
+  delay(10);
 }
 
 void blePeripheralDisconnectHandler(BLECentral& central) {
@@ -263,6 +266,7 @@ void blePeripheralDisconnectHandler(BLECentral& central) {
     Serial.print(F("Disconnected event, central: "));
     Serial.println(central.address());
   }
+  delay(10);
 }
 
 void blePeripheralServicesDiscoveredHandler(BLECentral& central) {
@@ -286,6 +290,7 @@ void blePeripheralServicesDiscoveredHandler(BLECentral& central) {
 
     WriteOnlyArrayGattCharacteristic.write((const unsigned char*)&writeValue, sizeof(writeValue));
   } */
+  delay(20);
   //delay(2000);
 }
 
@@ -334,6 +339,7 @@ void switchCharacteristicWritten(BLECentral& central, BLECharacteristic& charact
  //   digitalWrite(LED_PIN, LOW);
   }
  // delay(2000);
+ delay(10);
 }
 
 /********************************************************************************************************/
@@ -446,7 +452,7 @@ void loop()
 
    /******************* Bluetooth App Integration ********************/
     blePeripheral.poll(); 
-    delay(10);
+    delay(5);
 
     if(debug_time){ Serial.print("Time after BLE poll: "); Serial.println( (millis() - clocktime))/1000; }
 
@@ -510,7 +516,8 @@ void loop()
 
     /*********************** VL6180X Distance READ **************************/    
     if(debug){ Serial.println("Reading VL6180X Distance... "); } 
-    float distance = 255 - (float)vl6180x.readRangeSingleMillimeters();
+    // smoothed
+    float distance = ( distance + ( 255 - (float)vl6180x.readRangeSingleMillimeters() ) ) / 2;
  //   delay(15);
     if (vl6180x.timeoutOccurred() && debug) { Serial.print(" TIMEOUT"); }
         
@@ -520,8 +527,8 @@ void loop()
    /************************ Thermopile mgmt **************************/
     //MLX90615 THERMOPILE SENSORS I2C CUSTOM ADDRESSES - SMOOTHED!!!!
     for(int j = 0; j < 4; j++){
-        TAmb[j] = (TAmb[j] + readAmbientTempF(j+1))/2; 
-        TObj[j] = (TObj[j] + readObjectTempF(j+1))/2;
+        TAmb[j] = (TAmb[j] + TAmb[j] + readAmbientTempF(j+1))/3; 
+        TObj[j] = (TObj[j] + TObj[j] + readObjectTempF(j+1))/3;
     }
 
     TAmbAv = (TAmb[0] + TAmb[1] + TAmb[2] + TAmb[3]) / 4;
