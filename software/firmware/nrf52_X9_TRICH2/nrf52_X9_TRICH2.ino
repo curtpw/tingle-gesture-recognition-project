@@ -516,7 +516,7 @@ void loop()
 
     /*********************** VL6180X Distance READ **************************/    
     if(debug){ Serial.println("Reading VL6180X Distance... "); } 
-    // smoothed
+    //  smoothed
     float distance = ( distance + ( 255 - (float)vl6180x.readRangeSingleMillimeters() ) ) / 2;
  //   delay(15);
     if (vl6180x.timeoutOccurred() && debug) { Serial.print(" TIMEOUT"); }
