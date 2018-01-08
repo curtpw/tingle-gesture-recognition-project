@@ -21,7 +21,7 @@ bool  debug = false;        //turn serial on/off to get data or turn up sample r
 bool  debug_time = false;    //turn loop component time debug on/off
 
 
-int   speedHz = 8; //throttled loop speed - native max loop speed is about 35 ms or 28Hz
+int   speedHz = 6; //throttled loop speed - native max loop speed is about 35 ms or 28Hz
 float speedMs = 1000 / speedHz;  //native max loop speed is 62.5 ms or 16Hz
   
 float detect_objT_lowpass =    80;
@@ -363,7 +363,9 @@ void setup()
     vl6180x.configureDefault();
     delay(500);
     vl6180x.setTimeout(100);
-    delay(200);
+    delay(100);
+    vl6180x.setScaling(2); //resolution x0.5 , range x2
+    delay(100);
 
   /************ INIT KX126 ACCELEROMETER *****************************/
     Serial.print("KX126 INIT RESPONSE WAS ");
@@ -512,28 +514,30 @@ void loop()
     } else { roll = roll + 90; }
 
     if(debug_time){ Serial.print("Time after accelerometer read: "); Serial.println( (millis() - clocktime))/1000; }
-
-
-    /*********************** VL6180X Distance READ **************************/    
-    if(debug){ Serial.println("Reading VL6180X Distance... "); } 
-    //  smoothed
-    float distance = ( distance + ( 255 - (float)vl6180x.readRangeSingleMillimeters() ) ) / 2;
- //   delay(15);
-    if (vl6180x.timeoutOccurred() && debug) { Serial.print(" TIMEOUT"); }
-        
-    if(debug_time){ Serial.print("Time after distance read: "); Serial.println( (millis() - clocktime))/1000; }
     
 
    /************************ Thermopile mgmt **************************/
-    //MLX90615 THERMOPILE SENSORS I2C CUSTOM ADDRESSES - SMOOTHED!!!!
+    //MLX90615 THERMOPILE SENSORS I2C CUSTOM ADDRESSES - NOT SMOOTHED!!!!
     for(int j = 0; j < 4; j++){
-        TAmb[j] = (TAmb[j] + TAmb[j] + readAmbientTempF(j+1))/3; 
-        TObj[j] = (TObj[j] + TObj[j] + readObjectTempF(j+1))/3;
+        TAmb[j] = readAmbientTempF(j+1); 
+        TObj[j] = readObjectTempF(j+1);
     }
 
     TAmbAv = (TAmb[0] + TAmb[1] + TAmb[2] + TAmb[3]) / 4;
 
     if(debug_time){ Serial.print("Time after thermo read: "); Serial.println( (millis() - clocktime))/1000; }
+
+
+        /*********************** VL6180X Distance READ **************************/    
+    if(debug){ Serial.println("Reading VL6180X Distance... "); } 
+
+    distance = 255 - (float)vl6180x.readRangeSingleMillimeters();
+ //   delay(15);
+    if (vl6180x.timeoutOccurred() && debug) { Serial.print(" TIMEOUT"); }
+        
+    if(debug_time){ Serial.print("Time after distance read: "); Serial.println( (millis() - clocktime))/1000; }
+
+    
 
     if(debug){
     for(int k = 0; k < 4; k++){
@@ -624,7 +628,7 @@ void loop()
               //send data over bluetooth
               DataCharacteristic.setValue(imuCharArray,20);
               //time to send
-              delay(10);
+              delay(15);
           }
   
           // increment previous time, so we keep proper pace
