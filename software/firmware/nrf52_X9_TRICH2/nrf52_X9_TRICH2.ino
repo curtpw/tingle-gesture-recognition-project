@@ -17,14 +17,14 @@
 /********************************************************************************************************/
 /************************ CONSTANTS / SYSTEM VAR ********************************************************/
 /********************************************************************************************************/
-bool  debug = false;        //turn serial on/off to get data or turn up sample rate
+bool  debug = true;        //turn serial on/off to get data or turn up sample rate
 bool  debug_time = false;    //turn loop component time debug on/off
 
 
 int   speedHz = 16; //throttled loop speed - native max loop speed is about 35 ms or 28Hz
 float speedMs = 1000 / speedHz;  //native max loop speed is 62.5 ms or 16Hz
 
-int selectNN = 0;
+int   selectNN = 0;
 
 float detect_objT_lowpass =    80;
 float detect_objT_highpass =   102;
@@ -121,7 +121,7 @@ int   limit_stopRepeatDetect = 200;
   //Bluetooth
     unsigned long microsPerReading, microsPrevious;
     float accelScal;
-    int   command_value = 0; //controlls how device and app talk to each other
+    int   command_value = 99; //controlls how device and app talk to each other
 
   //System
     int   varState = 0; //variable state controlled in app and appended to data stream
@@ -251,7 +251,6 @@ double readAmbientTempC(int sensorNum) {
 /********************************************************************************************************/
 void blePeripheralConnectHandler(BLECentral& central) {
   // central connected event handler
-  command_value = 1;
   transmittedCounter = 0; //reset NN weight transmittions counter
   if(debug){
     Serial.print(F("Connected event, central: "));
@@ -262,7 +261,6 @@ void blePeripheralConnectHandler(BLECentral& central) {
 
 void blePeripheralDisconnectHandler(BLECentral& central) {
   // central disconnected event handler
-  command_value = 0;
   transmittedCounter = 0; //reset NN weight transmittions counter
   if(debug){
     Serial.print(F("Disconnected event, central: "));
@@ -319,6 +317,7 @@ void bleCharacteristicValueUpdatedHandle(BLECentral& central, BLECharacteristic&
 
 //  if(debug) Serial.print("Raw command: "); Serial.println( the_buffer );
 //  if(debug) 
+  selectNN = command_value;
   Serial.print("APP COMMAND: "); Serial.println( command_value );
 
 
@@ -534,6 +533,7 @@ void loop()
     if(debug){ Serial.println("Reading VL6180X Distance... "); } 
 
     distance = 255 - (float)vl6180x.readRangeSingleMillimeters();
+    if(distance < 0.1){ distance = 0; } // edge case
  //   delay(15);
     if (vl6180x.timeoutOccurred() && debug) { Serial.print(" TIMEOUT"); }
         
@@ -556,6 +556,8 @@ void loop()
     Serial.print("ACC Z: "); Serial.print( acc[2] ); Serial.println("F"); 
     
     Serial.print("Distance (mm): "); Serial.println(distance); 
+
+    Serial.print("CMD: "); Serial.println(command_value);
     }
 
     //Debug var state
