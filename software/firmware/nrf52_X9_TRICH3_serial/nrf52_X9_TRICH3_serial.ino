@@ -32,9 +32,15 @@ bool    debug = true;        //turn serial on/off to get data or turn up sample 
 bool    debug_time = false;    //turn loop component time debug on/off
 
 //native max loop speed is about 35 ms or 28Hz
-uint32_t sixteenHz =  500;
-uint32_t tenHz =  1000;
-uint32_t fiveHz = 2000;
+//uint32_t sixteenHz =  2000;
+//uint32_t tenHz =  8000;
+uint32_t fiveHz = 5000;
+
+float   speedLowpower  = 1000 / 4;  //2Hz default power saving speed
+float   speedBluetooth = 1000 / 10; //16Hz while connected to 
+float   speedBallpark  = 1000 / 8; //8Hz when NN approach target
+
+float   speedMs = speedBluetooth;
 
 
 float   detect_objT_lowpass =    80;
@@ -58,6 +64,8 @@ int     limit_stopRepeatDetect = 200;
 //#define HEART_RATE_DETECTOR_PIN   29
 //#define TOUCH_BUTTON_PIN          30
 #define VIBRATE_PIN                 8
+
+#define BATTERY_PIN                 28
 
 //Accelerometer Pins
 #define CS_PIN                      24
@@ -182,24 +190,6 @@ KX126_SPI kx126(CS_PIN);
 //Bluetooth
 // create peripheral instance, see pinout definitions above
 BLESerial bleSerial(BLE_REQ, BLE_RDY, BLE_RST);
-/*
-// create peripheral instance, see pinouts above
-BLEPeripheral blePeripheral = BLEPeripheral();
-
-// create service
-//BLEService customService =    BLEService("FFFF");
-BLEService customService =    BLEService("a000");
-
-// create command i/o characteristics
-BLECharCharacteristic    ReadOnlyArrayGattCharacteristic  = BLECharCharacteristic("a001", BLERead);
-BLECharCharacteristic    WriteOnlyArrayGattCharacteristic = BLECharCharacteristic("a002", BLEWrite);
-
-//create streaming data characteristic
-BLECharacteristic        DataCharacteristic("a003", BLERead | BLENotify, 20);  //@param data - an Uint8Array.
-*/
-//create streaming neural network i/o characteristic
-//BLECharacteristic    ReadNeuralNetCharacteristic  = BLECharacteristic("a004", BLERead | BLENotify, 20); //@param data - an Uint8Array.
-//BLECharacteristic    WriteNeuralNetCharacteristic  = BLECharacteristic("a005", BLEWrite, 20); //@param data - an Uint8Array.
 
 //Permanent storage for neural network target configuration
 BLEBondStore bleBondStore;
@@ -272,12 +262,18 @@ double readAmbientTempC(int sensorNum) {
 void setup() 
 {
     // custom services and characteristics can be added as well
-    bleSerial.setLocalName("UART");
+    bleSerial.setLocalName("ChildmindsMATTER");
 
     //Hardware UART
-    Serial.begin(115200);
+    if(debug || debug_time){ Serial.begin(115200); }
+
+    
     //Bluetooth UART
     bleSerial.begin();
+    
+    // acceptable values are: -40, -30, -20, -16, -12, -8, -4, 0, 4
+    int power = -4;
+    sd_ble_gap_tx_power_set(power);
     
     if(debug) Serial.print("STARTING\t");
     delay(50);
@@ -287,21 +283,21 @@ void setup()
     delay(50);
 
   /************ INIT VL53L0X DISTANCE SENSOR *****************************/
-    Serial.println("VL6180X INIT");
+    if(debug) Serial.println("VL6180X INIT");
     vl6180x.init();
     delay(500);
-    Serial.println("VL6180X vl6180x.configureDefault();");
+    if(debug) Serial.println("VL6180X vl6180x.configureDefault();");
     vl6180x.configureDefault();
     delay(500);
-    Serial.println("VL6180X vl6180x.setTimeout(100);");
+    if(debug) Serial.println("VL6180X vl6180x.setTimeout(100);");
     vl6180x.setTimeout(100);
     delay(100);
     vl6180x.setScaling(2); //resolution x0.5 , range x2
     delay(100);
 
   /************ INIT KX126 ACCELEROMETER *****************************/
-    Serial.print("KX126 INIT RESPONSE WAS ");
-    Serial.println(kx126.init());
+    if(debug) Serial.print("KX126 INIT RESPONSE WAS ");
+    if(debug) Serial.println(kx126.init());
     delay(200);
 
   /************ I/O BUTTON, LED, HAPTIC FEEDBACK *********************/
@@ -341,62 +337,28 @@ void setup()
 
 void loop()
 {     
-  //TEST BLUETOOTH SERIAL
+          //BLUETOOTH SERIAL
   bleSerial.poll();
- // forward();
- // loopback();
-//  spam();
+  delay(80);
 
-  
-   /******************** Low Power Sleep Speed Control ********************/
- //  uint32_t timeoutTest = 1000;
-   __delay(fiveHz);
-  
-   /******************** Timestamp **************************/
-    clocktime = millis();
-    if(debug){
-        Serial.println(" "); Serial.print("TIME: "); Serial.print( clocktime/1000 ); Serial.println(" s"); 
-    }
+  /*************** LOOP SPEED CONTROL **********************************/
+if(clocktime + speedMs < millis()){
 
-    if(debug_time){ Serial.print("Time after init speed limit check: "); Serial.println(millis() - clocktime); }
-    
 
-   /************************* Button mgmt ****************************/
-    // read the state of the pushbutton value:
-    buttonState = digitalRead(BUTTON_PIN);
-    if (buttonState == 1 && LED_counter < 10 ) {
-      // turn LED on:
-      LED_counter = 80;
-      digitalWrite(GREEN_LED_PIN, 1);
-      greenLED_status = true;
-    } 
-    if (debug) { 
-      Serial.print("BUTTON: ");
-      Serial.println(buttonState);
-    }
-    
+  /*************** TIMESTAMP *******************************************/
+   clocktime = millis();
+   if(debug){ Serial.println(" "); Serial.print("TIME: "); Serial.print( clocktime/1000 ); Serial.println(" s"); }
+   if(debug_time){ Serial.print("Time after init speed limit check: "); Serial.println(millis() - clocktime); }
 
-   /*************************** LED mgmt *****************************/
-   //example blink program
-   if(LED_counter > 0 && greenLED_status == false ){
-      LED_counter--;
-      if(LED_counter <= 0){
-          LED_counter = 2;
-          digitalWrite(GREEN_LED_PIN, 1);
-          greenLED_status = true;
-      }
-   }
-   else if(LED_counter > 0 && greenLED_status == true){
-      LED_counter--;
-      if(LED_counter <= 0){
-          LED_counter = 30;
-          digitalWrite(GREEN_LED_PIN, 0);
-          greenLED_status = false;
-      }
-   }
-  if(debug_time){ Serial.print("Time after button & LED: "); Serial.println( (millis() - clocktime))/1000; }
 
-  /************************ Haptic Feedback mgmt *************************/
+  /*************** BUTTON MGMT *****************************************/
+   buttonMGMT();
+
+  /*************** LED MGMT ********************************************/
+   ledMGMT();
+   if(debug_time){ Serial.print("Time after button & LED: "); Serial.println( (millis() - clocktime))/1000; }
+
+  /*************** VIBRATION MOTOR MGMT ********************************/
   if(vibrate_counter > 0){
       vibrate_counter--;
       if(vibrate_status == false){
@@ -408,9 +370,75 @@ void loop()
     digitalWrite(VIBRATE_PIN, 0);
   }
 
+   /************** READ KX126 ACCELEROMETER *****************************/
+   sampleAngularPosition();
+   if(debug_time){ Serial.print("Time after accelerometer read: "); Serial.println( (millis() - clocktime))/1000; }
+    
+
+   /************** READ MLX90615 THERMOPILES ****************************/
+   sampleThermopiles();
+   if(debug_time){ Serial.print("Time after thermo read: "); Serial.println( (millis() - clocktime))/1000; }
 
 
-   /******************* READ KX126 ACCELEROMETER *********************/
+   /************** READ VL6180X LIDAR DISTANCE **************************/ 
+   sampleLIDAR();   
+   if(debug_time){ Serial.print("Time after distance read: "); Serial.println( (millis() - clocktime))/1000; }
+
+
+   /************** TRANSMIT SENSOR DATA OVER BLUETOOTH ******************/ 
+   transmitSensorData();
+   if(debug_time){ Serial.print("Time after Bluetooth serial send: "); Serial.println( (millis() - clocktime))/1000; }
+
+
+   /************** PRINT SENSOR DATA TO CONSOLE *************************/ 
+   if(debug){ printSensorData(); }
+   
+    
+   /************** NEURAL NETWORK GESTURE RECOGNITION *******************/
+   if(selectNN != 0){
+      int setting = 0; //dummy for now
+      detectGesture(selectNN, setting, TObj[0], TObj[1], TObj[2], TObj[3], distance, pitch, roll);
+   }
+
+    //Debug var state
+/*    if(debug){
+      Serial.print("**COMMAND: ");
+      Serial.println(command_value);
+    } */
+
+
+  
+    // check if it's time to read data and update the filter
+    unsigned long microsNow;
+    microsNow = micros(); 
+    //if(microsNow - microsPrevious >= microsPerReading){
+    // increment previous time, so we keep proper pace
+    microsPrevious = microsPrevious + microsPerReading;
+       
+
+  
+    if(debug_time){ Serial.print("TIME LOOP: "); Serial.println(millis() - clocktime); }
+
+//end timed loop
+ }
+
+  /*********** Power MGMT ******************/
+  //https://github.com/sandeepmistry/arduino-nRF5/issues/190
+  uint32_t timeoutTest = 1000;
+   __delay(timeoutTest);
+  sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
+  sd_app_evt_wait();
+
+} //end infinate loop
+
+/********************************************************************************************************/
+/************************ FUNCTIONS *********************************************************************/
+/********************************************************************************************************/
+
+/*********************************************************************
+*************** READ KX126 ACCELEROMETER *****************************
+*********************************************************************/
+void sampleAngularPosition(){
     //KX022 ACCELEROMETER I2C
     acc[0] = (float)(kx126.getAccel(0) * 10 );
     acc[1] = (float)(kx126.getAccel(1) * 10 );
@@ -427,170 +455,152 @@ void loop()
       roll = 450 + roll;
       if(roll > 360){roll = roll - 360;}
     } else { roll = roll + 90; }
+}
 
-    if(debug_time){ Serial.print("Time after accelerometer read: "); Serial.println( (millis() - clocktime))/1000; }
-    
-
-   /************************ Thermopile mgmt **************************/
-    //MLX90615 THERMOPILE SENSORS I2C CUSTOM ADDRESSES - NOT SMOOTHED!!!!
+/*********************************************************************
+*************** READ MLX90615 THERMOPILES ****************************
+*********************************************************************/
+void sampleThermopiles(){
     for(int j = 0; j < 4; j++){
         TAmb[j] = readAmbientTempF(j+1); 
         TObj[j] = readObjectTempF(j+1);
     }
-
     TAmbAv = (TAmb[0] + TAmb[1] + TAmb[2] + TAmb[3]) / 4;
+}
 
-    if(debug_time){ Serial.print("Time after thermo read: "); Serial.println( (millis() - clocktime))/1000; }
-
-
-        /*********************** VL6180X Distance READ **************************/    
-    if(debug){ Serial.println("Reading VL6180X Distance... "); } 
-
+/*********************************************************************
+*************** READ VL6180X LIDAR DISTANCE **************************
+*********************************************************************/
+void sampleLIDAR(){
     distance = 255 - (float)vl6180x.readRangeSingleMillimeters();
     if(distance < 0.1){ distance = 0; } // edge case
- //   delay(15);
-    if (vl6180x.timeoutOccurred() && debug) { Serial.print(" TIMEOUT"); }
-        
-    if(debug_time){ Serial.print("Time after distance read: "); Serial.println( (millis() - clocktime))/1000; }
+    if (vl6180x.timeoutOccurred() && debug) { Serial.print(" TIMEOUT"); } 
+}
 
+/*********************************************************************
+*************** TRANSMIT SENSOR DATA OVER BLUETOOTH ****************** 
+*********************************************************************/
+void transmitSensorData(){
+    if (bleSerial) {
+       /*
+       * reduce temperature readings to a range between 0 and 31, then multiply to use up the 256 max decimal value of an 8 bit integer
+       * Object temperature floor: 70F
+       * Object temperature ceiling: 101F
+       */
+       float TObj_compressed[4];
+       for(int q=0; q < 4; q++){
+          TObj_compressed[q] = TObj[q];
+          if(TObj_compressed[q] < 70){ TObj_compressed[q] = 70;  }
+          else if(TObj_compressed[q] > 101){ TObj_compressed[q] = 101;  }
+          TObj_compressed[q] = (TObj_compressed[q] - 70)*8;
+       }
+              
+       float TAmbAv_compressed;
+       TAmbAv_compressed = TAmbAv;
+       if(TAmbAv < 70){ TAmbAv_compressed = 70;  }
+       else if(TAmbAv > 101){ TAmbAv_compressed = 101;  }
+       TAmbAv_compressed = (TAmbAv_compressed - 70)*8;
+              
+      //get battery charge value
+       int batteryValue = ( analogRead(BATTERY_PIN) / 1022) * 100; //max A read is 1023
+       
+       char sensorCharArray[20] = {
+         (uint8_t)(roll),  
+         (uint8_t)(pitch),
+         (uint8_t)(distance),
+         (uint8_t)(TObj_compressed[0]),  
+         (uint8_t)(TObj_compressed[1]),
+         (uint8_t)(TObj_compressed[2]),
+         (uint8_t)(TObj_compressed[3]),
+         (uint8_t)( (acc[0] + 1.00) * 100.00),               
+         (uint8_t)( (acc[1] + 1.00) * 100.00),
+         (uint8_t)( (acc[2] + 1.00) * 100.00),
+         (uint8_t)0,
+         (uint8_t)0,
+         (uint8_t)0,
+         (uint8_t)0,
+         (uint8_t)0,
+         (uint8_t)0,
+         (uint8_t)0,
+         (uint8_t)0,
+         (uint8_t)0,  
+         (uint8_t)0  
+       };
     
-
-    if(debug){
-    for(int k = 0; k < 4; k++){
-      Serial.print("OT"); Serial.print(k+1); Serial.print(": ");
-      Serial.print( TObj[k] );
-      Serial.print("    AT"); Serial.print(k+1); Serial.print(": ");
-      Serial.println( TAmb[k] );
+   //   bleSerial.print(millis());
+   //   bleSerial.println(" tick-tacks!");
+      bleSerial.println(sensorCharArray);
+      if(debug){ Serial.println("Transmitting data.."); }
     }
+}
 
-    Serial.print("TAave: "); Serial.print( TAmbAv ); Serial.println("F"); 
+/*********************************************************************
+*************** PRINT SENSOR DATA TO CONSOLE *************************
+*********************************************************************/
+void printSensorData(){
+    Serial.print("OT1: "); Serial.print( TObj[0] ); Serial.print("\t"); 
+    Serial.print("OT2: "); Serial.print( TObj[1] ); Serial.print("\t");
+    Serial.print("OT3: "); Serial.print( TObj[2] ); Serial.print("\t");
+    Serial.print("OT4: "); Serial.print( TObj[3] ); Serial.print("\t");
+    Serial.print("DTav: "); Serial.print( TAmbAv ); Serial.println("");
    
-    Serial.print("ACC X: "); Serial.print( acc[0] ); Serial.println("F"); 
-    Serial.print("ACC Y: "); Serial.print( acc[1] ); Serial.println("F"); 
-    Serial.print("ACC Z: "); Serial.print( acc[2] ); Serial.println("F"); 
+    Serial.print("accX: "); Serial.print( acc[0] ); Serial.print("\t"); 
+    Serial.print("accY: "); Serial.print( acc[1] ); Serial.print("\t"); 
+    Serial.print("accZ: "); Serial.print( acc[2] ); Serial.println(""); 
     
     Serial.print("Distance (mm): "); Serial.println(distance); 
 
     Serial.print("CMD: "); Serial.println(command_value);
-    Serial.print("NN5: "); Serial.print(fiveInScore); Serial.print("  NN7: "); Serial.println(sevenInScore);
-    }
-
-    //Debug var state
-/*    if(debug){
-      Serial.print("**COMMAND: ");
-      Serial.println(command_value);
-    } */
-
-/*********** Neural Network Gesture Recognition **********/
-//https://github.com/sandeepmistry/arduino-nRF5/issues/190
-    if(selectNN != 0){
-      int setting = 0; //dummy for now
-      detectGesture(selectNN, setting, TObj[0], TObj[1], TObj[2], TObj[3], distance, pitch, roll);
-    }
-  
-/*********** Bluetooth Asynchronous Streaming Data *******************/
-    unsigned long microsNow;
-    
-    int roll_ble = roll;
-    int pitch_ble = pitch;
-    
-    // check if it's time to read data and update the filter
-    microsNow = micros();
-    
- //   if(microsNow - microsPrevious >= microsPerReading){
-
-              /*
-               * reduce temperature readings to a range between 0 and 31, then multiply to use up the 256 max decimal value of an 8 bit integer
-               * Object temperature floor: 70F
-               * Object temperature ceiling: 101F
-               */
-              float TObj_compressed[4];
-              for(int q=0; q < 4; q++){
-                  TObj_compressed[q] = TObj[q];
-                  if(TObj_compressed[q] < 70){ TObj_compressed[q] = 70;  }
-                  else if(TObj_compressed[q] > 101){ TObj_compressed[q] = 101;  }
-                  TObj_compressed[q] = (TObj_compressed[q] - 70)*8;
-              }
-              
-              float TAmbAv_compressed;
-              TAmbAv_compressed = TAmbAv;
-              if(TAmbAv < 70){ TAmbAv_compressed = 70;  }
-              else if(TAmbAv > 101){ TAmbAv_compressed = 101;  }
-              TAmbAv_compressed = (TAmbAv_compressed - 70)*8;
-
-              //OLD BACKWARDS COMPATABLE
-              const unsigned char imuCharArray[20] = {
-                  (uint8_t)(roll),  
-                  (uint8_t)(pitch),
-                  (uint8_t)(distance),
-                  (uint8_t)(TObj_compressed[0]),  
-                  (uint8_t)(TObj_compressed[1]),
-                  (uint8_t)(TObj_compressed[2]),
-                  (uint8_t)(TObj_compressed[3]),
-                  (uint8_t)( (acc[0] + 1.00) * 100.00),               
-                  (uint8_t)( (acc[1] + 1.00) * 100.00),
-                  (uint8_t)( (acc[2] + 1.00) * 100.00),  
-                  (uint8_t)0,
-                  (uint8_t)0,
-                  (uint8_t)0,
-                  (uint8_t)0,
-                  (uint8_t)0,
-                  (uint8_t)0,
-                  (uint8_t)0,
-                  (uint8_t)0,
-                  (uint8_t)0,  
-                  (uint8_t)0                  
-              }; 
-              //send data over bluetooth
-              transmitSensorData(TObj_compressed[0], TObj_compressed[1], TObj_compressed[2], TObj_compressed[3], distance, pitch, roll, acc[0], acc[1], acc[2]);
-              //time to send
-              delay(5);
-  
-          // increment previous time, so we keep proper pace
-          microsPrevious = microsPrevious + microsPerReading;
-        
- //    }
-
-     if(debug_time){ Serial.print("Time after bluetooth send: "); Serial.println( (millis() - clocktime))/1000; }
-  
-  /*********** Bluetooth App Integration *******************/
-
-
-  
-    if(debug_time){ Serial.print("TIME LOOP: "); Serial.println(millis() - clocktime); }
-
-  /*********** Low Power & Sleep Mode MGMT ******************/
-    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
-    sd_app_evt_wait();
-    
-
-} //end infinate loop
-
-
-
-int hex_to_int(char c){
-  int first;
-  int second;
-  int value;
-  
-  if (c >= 97) {
-    c -= 32;
-  }
-  first = c / 16 - 3;
-  second = c % 16;
-  value = first * 10 + second;
-  if (value > 9) {
-    value--;
-  }
-  return value;
+    Serial.print("NN5: "); Serial.print(fiveInScore); Serial.print("  NN7: "); Serial.print(sevenInScore);
+    int batteryValue = ( analogRead(BATTERY_PIN) / 1022) * 100; //max A read is 1023
+    Serial.print("  Battery: "); Serial.println(batteryValue);
 }
 
-int hex_to_ascii(char c, char d){
-  int high = hex_to_int(c) * 16;
-  int low = hex_to_int(d);
-  return high+low;
+/*********************************************************************
+**************** BUTTON MGMT *****************************************
+*********************************************************************/
+void buttonMGMT(){
+    // read the state of the pushbutton value:
+    buttonState = digitalRead(BUTTON_PIN);
+    if (buttonState == 1 && LED_counter < 10 ) {
+      // turn LED on:
+      LED_counter = 80;
+      digitalWrite(GREEN_LED_PIN, 1);
+      greenLED_status = true;
+    } 
+    if (debug) { 
+      Serial.print("BUTTON: ");
+      Serial.println(buttonState);
+    } 
 }
 
+/*********************************************************************
+**************** LED MGMT ********************************************
+*********************************************************************/
+void ledMGMT(){
+   //example blink program
+   if(LED_counter > 0 && greenLED_status == false ){
+      LED_counter--;
+      if(LED_counter <= 0){
+          LED_counter = 2;
+          digitalWrite(GREEN_LED_PIN, 1);
+          greenLED_status = true;
+      }
+   }
+   else if(LED_counter > 0 && greenLED_status == true){
+      LED_counter--;
+      if(LED_counter <= 0){
+          LED_counter = 30;
+          digitalWrite(GREEN_LED_PIN, 0);
+          greenLED_status = false;
+      }
+   }  
+}
+
+
+/*********************************************************************
+*************** NEURAL NETWORK GESTURE RECOGNITION *******************
+*********************************************************************/
 void detectGesture(int selectNN, int setting, float t1, float t2, float t3, float t4, float distance, float pitch, float roll){
   float fivePrediction = 0; float sevenPrediction = 0;
 
@@ -631,6 +641,10 @@ if(debug){ Serial.print("in detectGesture selectNN: "); Serial.print(selectNN); 
   if(flag_detect){ vibrate_counter = 3; }
 }
 
+/*********************************************************************
+*************** ETC **************************************************
+*********************************************************************/
+
 void __delay(uint32_t timeout)
 {
   uint32_t start;
@@ -669,27 +683,29 @@ void spam() {
   }
 }
 
-void transmitSensorData(float t1, float t2, float t3, float t4, float distance, float pitch, float roll, float accX, float accY, float accZ){
-    if (bleSerial) {
-    //   const unsigned char sensorCharArray[10] = {
-       char sensorCharArray[10] = {
-         (uint8_t)(roll),  
-         (uint8_t)(pitch),
-         (uint8_t)(distance),
-         (uint8_t)(t1),  
-         (uint8_t)(t2),
-         (uint8_t)(t3),
-         (uint8_t)(t4),
-         (uint8_t)( (accX + 1.00) * 100.00),               
-         (uint8_t)( (accY + 1.00) * 100.00),
-         (uint8_t)( (accZ + 1.00) * 100.00)
-       };
-    
- //   bleSerial.print(millis());
-      bleSerial.println(" tick-tacks!");
-    //  bleSerial.println(sensorCharArray);
-    }
+int hex_to_int(char c){
+  int first;
+  int second;
+  int value;
+  
+  if (c >= 97) {
+    c -= 32;
+  }
+  first = c / 16 - 3;
+  second = c % 16;
+  value = first * 10 + second;
+  if (value > 9) {
+    value--;
+  }
+  return value;
 }
+
+int hex_to_ascii(char c, char d){
+  int high = hex_to_int(c) * 16;
+  int low = hex_to_int(d);
+  return high+low;
+}
+
 
 
 
