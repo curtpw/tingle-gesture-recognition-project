@@ -500,11 +500,14 @@ void transmitSensorData(){
        if(TAmbAv < 70){ TAmbAv_compressed = 70;  }
        else if(TAmbAv > 101){ TAmbAv_compressed = 101;  }
        TAmbAv_compressed = (TAmbAv_compressed - 70)*8;
+
+       float heartRate = 0; //placeholder
+       int command = 0; //placeholder
               
       //get battery charge value
        int batteryValue = ( analogRead(BATTERY_PIN) / 1022) * 100; //max A read is 1023
        
-       char sensorCharArray[20] = {
+       char sensorCharArray[10] = {
          (uint8_t)(roll),  
          (uint8_t)(pitch),
          (uint8_t)(distance),
@@ -512,19 +515,19 @@ void transmitSensorData(){
          (uint8_t)(TObj_compressed[1]),
          (uint8_t)(TObj_compressed[2]),
          (uint8_t)(TObj_compressed[3]),
+         (uint8_t)(TAmbAv_compressed),
+         (uint8_t)(batteryValue),
+         (uint8_t)(command) /*,
          (uint8_t)( (acc[0] + 1.00) * 100.00),               
          (uint8_t)( (acc[1] + 1.00) * 100.00),
          (uint8_t)( (acc[2] + 1.00) * 100.00),
-         (uint8_t)0,
-         (uint8_t)0,
-         (uint8_t)0,
-         (uint8_t)0,
-         (uint8_t)0,
-         (uint8_t)0,
-         (uint8_t)0,
-         (uint8_t)0,
-         (uint8_t)0,  
-         (uint8_t)0  
+         (uint8_t)(heartRate),
+         (uint8_t)'0',
+         (uint8_t)'0',
+         (uint8_t)'0',
+         (uint8_t)'0',
+         (uint8_t)'0',  
+         (uint8_t)'0'  */
        };
     
    //   bleSerial.print(millis());
@@ -543,7 +546,9 @@ void printSensorData(){
     Serial.print("OT3: "); Serial.print( TObj[2] ); Serial.print("\t");
     Serial.print("OT4: "); Serial.print( TObj[3] ); Serial.print("\t");
     Serial.print("DTav: "); Serial.print( TAmbAv ); Serial.println("");
-   
+
+    Serial.print("pitch: "); Serial.print( pitch ); Serial.print("\t"); 
+    Serial.print("roll: "); Serial.print( roll ); Serial.print("\t"); 
     Serial.print("accX: "); Serial.print( acc[0] ); Serial.print("\t"); 
     Serial.print("accY: "); Serial.print( acc[1] ); Serial.print("\t"); 
     Serial.print("accZ: "); Serial.print( acc[2] ); Serial.println(""); 
