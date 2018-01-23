@@ -1,4 +1,6 @@
 
+
+
 //NOTE: Thermopile values are now smoothed   (((Xt-2...)/2 + Xt-1)/2 + X)/2    6/14/17
 /* NN 1: mouth
    NN 2: fronthead
@@ -11,8 +13,8 @@
 /************************ INCLUDES **********************************************************************/
 /********************************************************************************************************/
 #define NRF52
-
 #include <SPI.h>
+#include <ArduinoLowPower.h>
 #include <BLEPeripheral.h>    //bluetooth
 #include <BLEUtil.h>
 #include <Wire.h>
@@ -31,7 +33,7 @@ float   speedLowpower  = 1000 / 6;  //2Hz default power saving speed
 float   speedBluetooth = 1000 / 16; //16Hz while connected to 
 float   speedBallpark  = 1000 / 8; //8Hz when NN approach target
 
-float   speedMs = speedLowpower;
+float   speedMs = speedBluetooth;
 
 float   detect_objT_lowpass =    80;
 float   detect_objT_highpass =   102;
@@ -160,6 +162,9 @@ int     limit_stopRepeatDetect = 200;
 /********************************************************************************************************/
 /************************ DECLARATIONS ******************************************************************/
 /********************************************************************************************************/
+
+//arduino.org low power library designed for SAMD and Primo --> not completely compatable with ArduinoCore
+ArduinoLowPowerClass LowPower;
 
 //Time of Flight LIDAR distance sensor
 VL6180X vl6180x;
@@ -338,7 +343,7 @@ void bleCharacteristicValueUpdatedHandle(BLECentral& central, BLECharacteristic&
 
   BLEUtil::printBuffer(characteristic.value(), characteristic.valueLength());
  // if(debug) delay(1000);
-  delay(5);
+  delay(3);
 }
 
 
@@ -456,7 +461,7 @@ void setup()
 
 void loop()
 {     
- 
+ //LowPower.deepSleep(); //test
    /************************ LOOP SPEED CONTROL ***********************/
  if(clocktime + speedMs < millis()){
     /*************************** Timestamp ****************************/
@@ -672,7 +677,7 @@ void loop()
               //send data over bluetooth
               DataCharacteristic.setValue(imuCharArray,20);
               //time to send
-              delay(8);
+              delay(5);
           }
   
           // increment previous time, so we keep proper pace
