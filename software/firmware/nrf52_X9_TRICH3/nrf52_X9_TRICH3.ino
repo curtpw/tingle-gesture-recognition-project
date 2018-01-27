@@ -109,6 +109,8 @@ int     limit_stopRepeatDetect = 200;
 
   //Battery MGMT  
     int batteryValue = 100;
+    float buttonBeginPressTime = 0;
+    
   //Button
     int     buttonState = 0;         // variable for reading the pushbutton
 
@@ -146,6 +148,8 @@ int     limit_stopRepeatDetect = 200;
 
   //System
     int     varState = 0; //variable state controlled in app and appended to data stream
+    bool sleepLight = false;
+    bool sleepDeep = false;
 
   //MLX90615 Thermopiles
     float   TObj[4] = {0,0,0,0};
@@ -492,7 +496,6 @@ if(clocktime + speedMs < millis()){
  //   __delay(timeoutTest);
 
 
-
   /*************** BUTTON MGMT *****************************************/
    buttonMGMT();
 
@@ -716,18 +719,41 @@ void printSensorData(){
 **************** BUTTON MGMT *****************************************
 *********************************************************************/
 void buttonMGMT(){
+    
+    int lastButtonState = buttonState;
+    float pressTime = 0;
+    
     // read the state of the pushbutton value:
     buttonState = digitalRead(BUTTON_PIN);
-    if (buttonState == 1 && LED_counter < 10 ) {
+    
+    if (buttonState == 1) {
+      
+        if(buttonBeginPressTime != 0){ buttonBeginPressTime = millis(); }
+        pressTime = (buttonBeginPressTime - millis() ) / 1000;
+      
       // turn LED on:
-      LED_counter = 80;
-      digitalWrite(GREEN_LED_PIN, 1);
-      greenLED_status = true;
-    } 
-    if (debug) { 
-      Serial.print("BUTTON: ");
-      Serial.println(buttonState);
-    } 
+     // LED_counter = 80;
+        digitalWrite(GREEN_LED_PIN, 1);
+        delay(500);
+        digitalWrite(GREEN_LED_PIN, 0);
+    //  greenLED_status = true;
+    } else {
+      
+        if(buttonBeginPressTime != 0){ 
+            pressTime = (buttonBeginPressTime - millis() ) / 1000;
+            buttonBeginPressTime = 0; 
+        }
+        
+        if(pressTime > 3){ 
+            if(!sleepLight){ sleepLight = true; }
+            if(sleepLight){ sleepLight = false; }
+            LED_counter = 3;
+            Serial.println("****LIGHT SLEEP****");
+        }
+    }
+    if (debug) { Serial.print("BUTTON: "); Serial.print(buttonState); Serial.print("  Press time: "); Serial.print(pressTime); Serial.println("s"); } 
+    
+    if(pressTime > 8){ sleepDeep = true; if(debug){ Serial.println("DEEP SLEEP"); } delay(2000); }
 }
 
 /*********************************************************************
