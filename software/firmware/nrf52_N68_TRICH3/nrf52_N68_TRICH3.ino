@@ -49,25 +49,35 @@ int     limit_stopRepeatDetect = 200;
 /********************************************************************************************************/
 //SCL = 12  SDA = 11   RX = 14   TX = 13
 
-#define GREEN_LED_PIN               15
+#define GREEN_LED_PIN               23
 
-#define BUTTON_PIN                  29
+#define BUTTON_PIN                  23
 
-//#define HEART_RATE_LED_PIN        4
+//#define HEART_RATE_LED_PIN        26
 //#define HEART_RATE_DETECTOR_PIN   29
-//#define TOUCH_BUTTON_PIN          30
-#define VIBRATE_PIN                 8
+//#define TOUCH_BUTTON_PIN          23
+#define VIBRATE_PIN                 24
 
 #define BATTERY_PIN                 28
 // OR P5? #define BATTERY_PIN                 5
 
 //Accelerometer Pins
-#define CS_PIN                      24
+/*#define CS_PIN                      24
 
 #define KX022_SDI 19
 #define KX022_SDO 20
 #define KX022_SCL 18
 #define KX022_INT 23
+
+#define PIN_SPI_MISO         (KX022_SDO)
+#define PIN_SPI_MOSI         (KX022_SDI)
+#define PIN_SPI_SCK          (KX022_SCL)*/
+#define CS_PIN                      8
+
+#define KX022_SDI 15
+#define KX022_SDO 18
+#define KX022_SCL 13
+#define KX022_INT 11
 
 #define PIN_SPI_MISO         (KX022_SDO)
 #define PIN_SPI_MOSI         (KX022_SDI)
@@ -504,10 +514,10 @@ if(clocktime + speedMs < millis()){
 
 
   /*************** BUTTON MGMT *****************************************/
-   buttonMGMT();
+ //  buttonMGMT();
 
   /*************** LED MGMT ********************************************/
-   ledMGMT();
+ //  ledMGMT();
    if(debug_time){ Serial.print("Time after button & LED: "); Serial.println( (millis() - clocktime))/1000; }
 
 /*************** SLEEP MODE IF NOT CONNECTED AND NO DEBUGGING ********************************
@@ -522,6 +532,7 @@ if(IS_CONNECTED == false && debug ==  false && debug_time == false){
    
 } else {
   /*************** VIBRATION MOTOR MGMT ********************************/
+  /*
   if(vibrate_counter > 0){
       vibrate_counter--;
       if(vibrate_status == false){
@@ -532,6 +543,7 @@ if(IS_CONNECTED == false && debug ==  false && debug_time == false){
     vibrate_status == false;
     digitalWrite(VIBRATE_PIN, 0);
   }
+  */
 
    /************** READ KX126 ACCELEROMETER *****************************/
    sampleAngularPosition();
