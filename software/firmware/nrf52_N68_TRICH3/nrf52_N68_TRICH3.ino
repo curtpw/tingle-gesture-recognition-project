@@ -19,6 +19,7 @@
 #include <Wire.h>
 #include <KX126_SPI.h>        //accelerometer
 #include <VL6180X.h>          //distance sensor
+//#include <Arduino_nRF5x_lowPower.h>
 
 //pre-trained neural network weights and activation functions
 #include "neural_networks_LHAND_LHEAD.h"
@@ -27,51 +28,35 @@
 /********************************************************************************************************/
 /************************ CONSTANTS / SYSTEM VAR ********************************************************/
 /********************************************************************************************************/
-bool    debug = true;                 //turn serial on/off to get data or turn up sample rate
+bool    debug = false;                 //turn serial on/off to get data or turn up sample rate
 bool    debug_time = false;           //turn loop component time debug on/off
 bool    IS_CONNECTED = false;
 
 //native max loop speed is about 35 ms or 28Hz
 float   speedLowpower  = 1000 / 6;    //2Hz default power saving speed
-float   speedBluetooth = 1000 / 16;   //16Hz while connected to 
+float   speedBluetooth = 1000 / 18;   //16Hz while connected to 
 float   speedBallpark  = 1000 / 8;    //8Hz when NN approach target
 
-float   speedMs = speedLowpower;
-
-float   detect_objT_lowpass =    80;
-float   detect_objT_highpass =   102;
-int     tempScaleAdjust =        12;
-int     limit_stopRepeatDetect = 200;
-//int   read_heart_rate_interval = 20;
+float   speedMs = speedBluetooth;
 
 /********************************************************************************************************/
 /************************ DEFINITIONS *******************************************************************/
 /********************************************************************************************************/
-//SCL = 12  SDA = 11   RX = 14   TX = 13
+//SCL = 6  SDA = 7   RX = 12 (dummy)   TX = 3
 
-#define GREEN_LED_PIN               23
+//#define THERMOPILE_POWER_PIN        29
 
-#define BUTTON_PIN                  23
+#define GREEN_LED_PIN               30 //5
 
-//#define HEART_RATE_LED_PIN        26
-//#define HEART_RATE_DETECTOR_PIN   29
+#define BUTTON_PIN                  5
+
+
 //#define TOUCH_BUTTON_PIN          23
 #define VIBRATE_PIN                 24
 
 #define BATTERY_PIN                 28
-// OR P5? #define BATTERY_PIN                 5
 
 //Accelerometer Pins
-/*#define CS_PIN                      24
-
-#define KX022_SDI 19
-#define KX022_SDO 20
-#define KX022_SCL 18
-#define KX022_INT 23
-
-#define PIN_SPI_MISO         (KX022_SDO)
-#define PIN_SPI_MOSI         (KX022_SDI)
-#define PIN_SPI_SCK          (KX022_SCL)*/
 #define CS_PIN                      8
 
 #define KX022_SDI 15
@@ -89,7 +74,6 @@ int     limit_stopRepeatDetect = 200;
 #define MLX90615_I2CADDR2         0x2B 
 #define MLX90615_I2CADDR3         0x2C
 #define MLX90615_I2CADDR4         0x2D
-
 // RAM
 #define MLX90615_RAWIR1           0x04
 #define MLX90615_RAWIR2           0x05
@@ -281,6 +265,9 @@ void blePeripheralConnectHandler(BLECentral& central) {
 
   //CONNECTED!!!
   IS_CONNECTED = true;
+
+  //blink LED
+  LED_counter = 10;
   
   //increase speed while connected to Bluetooth
  // speedMs = speedBluetooth;
@@ -297,6 +284,9 @@ void blePeripheralDisconnectHandler(BLECentral& central) {
 
     //NOT CONNECTED!!!
     IS_CONNECTED = false;
+
+    //blink LED
+    LED_counter = 10;
   
   //bring spped back down to low power default
 //  speedMs = speedLowpower;
@@ -335,7 +325,7 @@ void blePeripheralServicesDiscoveredHandler(BLECentral& central) {
 
 void bleCharacteristicValueUpdatedHandle(BLECentral& central, BLECharacteristic& characteristic) {
   
-    if(debug){ Serial.print(F(" Begin bleCharacteristicValueUpdatedHandle: ")); }
+ //   if(debug){ Serial.print(F("bleCharacteristicValueUpdatedHandle: ")); }
     
   const unsigned char* the_buffer = characteristic.value();
   unsigned char the_length = characteristic.valueLength();
@@ -355,15 +345,13 @@ void bleCharacteristicValueUpdatedHandle(BLECentral& central, BLECharacteristic&
  // sscanf(temp_char_buffer, "%x", &command_value);
 
 //  if(debug) Serial.print("Raw command: "); Serial.println( the_buffer );
-//  if(debug) 
   selectNN = command_value;
-  Serial.print("APP COMMAND: "); Serial.println( command_value );
+  if(debug){ Serial.print("APP COMMAND: "); Serial.println( command_value ); }
 
 
 
-  BLEUtil::printBuffer(characteristic.value(), characteristic.valueLength());
- // if(debug) delay(1000);
-  delay(5);
+//  BLEUtil::printBuffer(characteristic.value(), characteristic.valueLength());
+//  delay(5);
 }
 
 
@@ -427,10 +415,11 @@ void setupBluetooth(){
 
 void setup() 
 {
+    
     Serial.begin(115200);
     if(debug) Serial.print("STARTING\t");
     delay(50);
-
+ 
     // start the I2C library:
     Wire.begin();
     delay(50);
@@ -439,8 +428,10 @@ void setup()
     Serial.println("VL6180X INIT");
     vl6180x.init();
     delay(500);
-    Serial.println("VL6180X vl6180x.configureDefault();");
-    vl6180x.configureDefault();
+  //  Serial.println("VL6180X vl6180x.configureDefault();");
+ //   vl6180x.configureDefault();
+    Serial.println("VL6180X vl6180x.configureCustom();");
+    vl6180x.configureCustom();
     delay(500);
     Serial.println("VL6180X vl6180x.setTimeout(100);");
     vl6180x.setTimeout(100);
@@ -448,20 +439,19 @@ void setup()
     vl6180x.setScaling(2); //resolution x0.5 , range x2
     delay(100);
 
+
+
   /************ INIT KX126 ACCELEROMETER *****************************/
     Serial.print("KX126 INIT RESPONSE WAS ");
     Serial.println(kx126.init());
     delay(200);
 
   /************ I/O BUTTON, LED, HAPTIC FEEDBACK *********************/
-     //Configure display LED pins
-    pinMode(GREEN_LED_PIN, OUTPUT); digitalWrite(GREEN_LED_PIN, 0);  
+     //Configure display LED pins  0-->on
+    pinMode(GREEN_LED_PIN, OUTPUT); digitalWrite(GREEN_LED_PIN, 1);  
 
     //Configure Button Pin
-    pinMode(BUTTON_PIN, INPUT);
-
-    //Set HR LED pin high/off to conserve power
-    //  pinMode(HEART_RATE_LED_PIN, OUTPUT);  digitalWrite(HEART_RATE_LED_PIN, 1);
+    pinMode(BUTTON_PIN, INPUT); 
 
    //configure haptic feedback pin
     pinMode(VIBRATE_PIN, OUTPUT);  digitalWrite(VIBRATE_PIN, 0);
@@ -484,7 +474,7 @@ void setup()
       F[i] = 99.999;
     }
 
-  delay(500);  
+  delay(100);  
 }
 
 /********************************************************************************************************/
@@ -493,7 +483,7 @@ void setup()
 
 void loop()
 {     
- 
+
    /************************ LOOP SPEED CONTROL ***********************/
 if(clocktime + speedMs < millis()){
   
@@ -507,14 +497,8 @@ if(clocktime + speedMs < millis()){
     blePeripheral.poll(); 
     if(debug_time){ Serial.print("Time after BLE poll: "); Serial.println( (millis() - clocktime))/1000; }
 
-  /******************* Low Power Sleep ********************/
-  //https://github.com/sandeepmistry/arduino-nRF5/issues/190
- //  uint32_t timeoutTest = 10;
- //   __delay(timeoutTest);
-
-
   /*************** BUTTON MGMT *****************************************/
- //  buttonMGMT();
+   buttonMGMT();
 
   /*************** LED MGMT ********************************************/
  //  ledMGMT();
@@ -524,32 +508,21 @@ if(clocktime + speedMs < millis()){
 **************** SLEEP MODE IF NOT CONNECTED AND NO DEBUGGING ********************************
 **************** SLEEP MODE IF NOT CONNECTED AND NO DEBUGGING ********************************/
 if(IS_CONNECTED == false && debug ==  false && debug_time == false){
-  
+    /******************* Low Power Sleep ********************/
+    //https://github.com/sandeepmistry/arduino-nRF5/issues/190
     uint32_t timeoutTest = 1000;
     __delay(timeoutTest);
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
-   sd_app_evt_wait();
+    sd_app_evt_wait();
    
 } else {
-  /*************** VIBRATION MOTOR MGMT ********************************/
-  /*
-  if(vibrate_counter > 0){
-      vibrate_counter--;
-      if(vibrate_status == false){
-          digitalWrite(VIBRATE_PIN, 1);
-          vibrate_status == true;
-      }
-  } else if(vibrate_status == true || vibrate_counter <= 0) {
-    vibrate_status == false;
-    digitalWrite(VIBRATE_PIN, 0);
-  }
-  */
-
+  
    /************** READ KX126 ACCELEROMETER *****************************/
    sampleAngularPosition();
    if(debug_time){ Serial.print("Time after accelerometer read: "); Serial.println( (millis() - clocktime))/1000; }
-    
 
+
+  
    /************** READ MLX90615 THERMOPILES ****************************/
    sampleThermopiles();
    if(debug_time){ Serial.print("Time after thermo read: "); Serial.println( (millis() - clocktime))/1000; }
@@ -559,7 +532,6 @@ if(IS_CONNECTED == false && debug ==  false && debug_time == false){
    sampleLIDAR();   
    if(debug_time){ Serial.print("Time after distance read: "); Serial.println( (millis() - clocktime))/1000; }
 
-    
 
    /************** TRANSMIT SENSOR DATA OVER BLUETOOTH ******************/ 
    transmitSensorData();
@@ -582,17 +554,6 @@ if(IS_CONNECTED == false && debug ==  false && debug_time == false){
       Serial.println(command_value);
     } */
 
-
-  /*
-    // check if it's time to read data and update the filter
-    unsigned long microsNow;
-    microsNow = micros(); 
-    //if(microsNow - microsPrevious >= microsPerReading){
-    // increment previous time, so we keep proper pace
-    microsPrevious = microsPrevious + microsPerReading;
-  */
-
-  
     if(debug_time){ Serial.print("TIME LOOP: "); Serial.println(millis() - clocktime); }
 
 //end IS_CONNECTED conditional sleep
@@ -758,7 +719,14 @@ void buttonMGMT(){
     
     // read the state of the pushbutton value:
     buttonState = digitalRead(BUTTON_PIN);
+
+    //fix because button won't stay low when not pressed
+    float buttonAnalog = analogRead(A3);
+    if(buttonAnalog < 700) buttonState = 0;
     
+  // print out the value you read:
+  Serial.print("BUTTON ANA A3: "); Serial.print(buttonAnalog); Serial.print("\t");
+  
     if (buttonState == 1) {
       
         if(buttonBeginPressTime != 0){ buttonBeginPressTime = millis(); }
@@ -766,9 +734,9 @@ void buttonMGMT(){
       
       // turn LED on:
      // LED_counter = 80;
-        digitalWrite(GREEN_LED_PIN, 1);
-        delay(500);
         digitalWrite(GREEN_LED_PIN, 0);
+        delay(500);
+        digitalWrite(GREEN_LED_PIN, 1);
     //  greenLED_status = true;
     } else {
       
@@ -784,7 +752,10 @@ void buttonMGMT(){
             Serial.println("****LIGHT SLEEP****");
         }
     }
-    if (debug) { Serial.print("BUTTON: "); Serial.print(buttonState); Serial.print("  Press time: "); Serial.print(pressTime); Serial.println("s"); } 
+    if (debug) { Serial.print("BUTTON: "); Serial.print(buttonState); Serial.print("  Press time: "); Serial.print(pressTime); Serial.print("s  Analog:"); Serial.println(buttonAnalog); } 
+  //    int sensorValue = analogRead(A2);
+  // print out the value you read:
+ // Serial.print("Ana Button Test: "); Serial.println(sensorValue); Serial.print("\t");
     
     if(pressTime > 8){ sleepDeep = true; if(debug){ Serial.println("DEEP SLEEP"); } delay(2000); }
 }
@@ -794,11 +765,19 @@ void buttonMGMT(){
 *********************************************************************/
 void ledMGMT(){
    //example blink program
+   if(LED_counter > 0){
+      LED_counter--;
+      digitalWrite(GREEN_LED_PIN, 0);
+   } else if( LED_counter > -1){
+      digitalWrite(GREEN_LED_PIN, 1);
+      LED_counter--;
+   }
+   /*
    if(LED_counter > 0 && greenLED_status == false ){
       LED_counter--;
       if(LED_counter <= 0){
           LED_counter = 2;
-          digitalWrite(GREEN_LED_PIN, 1);
+        //  digitalWrite(GREEN_LED_PIN, 0);
           greenLED_status = true;
       }
    }
@@ -806,10 +785,11 @@ void ledMGMT(){
       LED_counter--;
       if(LED_counter <= 0){
           LED_counter = 30;
-          digitalWrite(GREEN_LED_PIN, 0);
+     //     digitalWrite(GREEN_LED_PIN, 1);
           greenLED_status = false;
       }
    }  
+   */
 }
 
 
