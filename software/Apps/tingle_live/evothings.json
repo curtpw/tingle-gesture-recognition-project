@@ -1,0 +1,44 @@
+{
+  "name": "tingle-manager",
+  "version": "1.0.1",
+  "title": "Gesture Detection and Feedback",
+  "description": "Configures Tingle gesture detection and feedback bracelet.",
+  "tags": [
+    {
+      "label": "nRF52832",
+      "type": "platform"
+    },
+    {
+      "label": "ble",
+      "type": "comm"
+    }
+  ],
+  "libraries": [
+    {
+      "name": "jquery",
+      "version": "2.1.1"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "cordova-plugin-ble",
+      "version": "2.0.1"
+    },
+    {
+      "name": "cordova-plugin-vibration"
+    },
+    {
+      "name": "phonegap-nfc"
+    }
+  ],
+  "index-file": "index.html",
+  "uuid": "aac96ef4-0fe2-4af7-9420-7e162291d0d9",
+  "uuid_BACK": "db9579b8-5665-4dab-b3e5-66d63be47c63",
+  "icon": "app-icon.png",
+  "doc-url": "http://matter.childmind.org",
+  "long-description": "Configures Tingle gesture detection and feedback bracelet.",
+  "cordova-id": "cmi.matter.tingle.functional",
+  "author-name": "Curt White",
+  "author-email": "curtpw@gmail.com",
+  "author-url": "https://childmind.org"
+}
